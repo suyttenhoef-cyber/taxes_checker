@@ -1,0 +1,387 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<title>Annotateur Vanden Broele — index.json</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: 'Segoe UI', Arial, sans-serif; background: #F3F4F6; color: #1A3A5C; }
+
+  /* Header */
+  .header { background: #1A3A5C; color: #fff; padding: 14px 24px; display: flex; align-items: center; gap: 12px; position: sticky; top: 0; z-index: 100; }
+  .logo { background: #E87722; border-radius: 8px; width: 34px; height: 34px; display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 16px; }
+  .header h1 { font-size: 16px; font-weight: 700; }
+  .header small { opacity: .7; font-size: 12px; }
+  .header-actions { margin-left: auto; display: flex; gap: 10px; }
+  .btn { padding: 8px 16px; border: none; border-radius: 6px; font-size: 13px; font-weight: 600; cursor: pointer; }
+  .btn-orange { background: #E87722; color: #fff; }
+  .btn-blue   { background: #EEF3F8; color: #1A3A5C; border: 1px solid #1A3A5C33; }
+  .btn-green  { background: #F0FDF4; color: #15803D; border: 1px solid #15803D44; }
+
+  /* Layout */
+  .layout { display: grid; grid-template-columns: 280px 1fr; height: calc(100vh - 56px); }
+
+  /* Sidebar */
+  .sidebar { background: #fff; border-right: 1px solid #E5E7EB; overflow-y: auto; }
+  .sidebar-top { padding: 12px; border-bottom: 1px solid #E5E7EB; }
+  .sidebar-top input, .sidebar-top select { width: 100%; padding: 7px 10px; border: 1px solid #D1D5DB; border-radius: 6px; font-size: 12px; margin-bottom: 6px; color: #1A3A5C; }
+  .stats { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; margin-top: 8px; }
+  .stat { background: #F3F4F6; border-radius: 6px; padding: 8px; text-align: center; }
+  .stat .n { font-size: 20px; font-weight: 800; color: #E87722; }
+  .stat .l { font-size: 10px; color: #6B7280; }
+
+  /* Liste des règlements */
+  .list-item { padding: 10px 14px; border-bottom: 1px solid #F3F4F6; cursor: pointer; transition: background .1s; }
+  .list-item:hover { background: #FFF4EC; }
+  .list-item.active { background: #FFF4EC; border-left: 3px solid #E87722; }
+  .list-item .commune { font-weight: 600; font-size: 13px; }
+  .list-item .meta { font-size: 11px; color: #6B7280; margin-top: 2px; }
+  .badge { display: inline-block; padding: 1px 7px; border-radius: 10px; font-size: 10px; font-weight: 700; margin-right: 4px; }
+  .badge-taxe { background: #FFF4EC; color: #E87722; }
+  .badge-redevance { background: #EEF3F8; color: #1A3A5C; }
+  .badge-ok { background: #F0FDF4; color: #15803D; }
+  .badge-todo { background: #FFFBEB; color: #D97706; }
+  .badge-bad  { background: #FEF2F2; color: #DC2626; }
+
+  /* Éditeur */
+  .editor { padding: 24px; overflow-y: auto; background: #F3F4F6; }
+  .editor-placeholder { display: flex; align-items: center; justify-content: center; height: 100%; color: #6B7280; font-size: 14px; }
+  .card { background: #fff; border-radius: 10px; border: 1px solid #E5E7EB; padding: 20px; margin-bottom: 16px; }
+  .card h3 { font-size: 14px; color: #1A3A5C; margin-bottom: 14px; padding-bottom: 8px; border-bottom: 1px solid #F3F4F6; }
+  .field { margin-bottom: 12px; }
+  .field label { display: block; font-size: 11px; font-weight: 700; color: #6B7280; text-transform: uppercase; letter-spacing: .05em; margin-bottom: 4px; }
+  .field input, .field select, .field textarea { width: 100%; padding: 8px 10px; border: 1px solid #D1D5DB; border-radius: 6px; font-size: 13px; color: #1A3A5C; font-family: inherit; }
+  .field textarea { resize: vertical; min-height: 80px; }
+  .field input:focus, .field textarea:focus, .field select:focus { outline: none; border-color: #E87722; }
+  .grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+
+  /* Points forts */
+  .pf-list { list-style: none; }
+  .pf-item { display: flex; gap: 8px; align-items: flex-start; margin-bottom: 8px; }
+  .pf-item input { flex: 1; padding: 7px 10px; border: 1px solid #D1D5DB; border-radius: 6px; font-size: 13px; color: #1A3A5C; }
+  .pf-item input:focus { outline: none; border-color: #E87722; }
+  .btn-del { background: #FEF2F2; color: #DC2626; border: none; border-radius: 6px; width: 28px; height: 28px; cursor: pointer; font-size: 14px; flex-shrink: 0; }
+  .btn-add { background: #EEF3F8; color: #1A3A5C; border: 1px solid #1A3A5C22; border-radius: 6px; padding: 6px 14px; font-size: 12px; cursor: pointer; margin-top: 4px; }
+
+  /* Extrait */
+  .extrait-box { background: #FAFAFA; border: 1px solid #E5E7EB; border-radius: 6px; padding: 12px; font-family: Georgia, serif; font-size: 12px; line-height: 1.7; max-height: 180px; overflow-y: auto; white-space: pre-wrap; color: #374151; }
+
+  /* Qualité */
+  .qualite-btns { display: flex; gap: 8px; }
+  .qbtn { padding: 6px 14px; border-radius: 6px; font-size: 12px; font-weight: 600; cursor: pointer; border: 1px solid transparent; }
+  .qbtn.bonne     { background: #F0FDF4; color: #15803D; border-color: #15803D33; }
+  .qbtn.partielle { background: #FFFBEB; color: #D97706; border-color: #D9770633; }
+  .qbtn.insuffisante { background: #FEF2F2; color: #DC2626; border-color: #DC262633; }
+  .qbtn.active    { outline: 2px solid currentColor; }
+
+  /* Import zone */
+  .import-zone { border: 2px dashed #D1D5DB; border-radius: 10px; padding: 40px; text-align: center; cursor: pointer; transition: border-color .2s; margin: 20px; }
+  .import-zone:hover { border-color: #E87722; }
+  .import-zone p { color: #6B7280; font-size: 14px; margin-top: 8px; }
+
+  .toast { position: fixed; bottom: 24px; right: 24px; background: #1A3A5C; color: #fff; padding: 12px 20px; border-radius: 8px; font-size: 13px; font-weight: 600; opacity: 0; transition: opacity .3s; pointer-events: none; z-index: 999; }
+  .toast.show { opacity: 1; }
+</style>
+</head>
+<body>
+
+<div class="header">
+  <div class="logo">VB</div>
+  <div>
+    <h1>Annotateur de règlements</h1>
+    <small id="hdr-info">Aucun fichier chargé</small>
+  </div>
+  <div class="header-actions">
+    <button class="btn btn-blue" onclick="document.getElementById('fileInput').click()">📂 Ouvrir index.json</button>
+    <button class="btn btn-green" id="btn-export" onclick="exporterJSON()" style="display:none">💾 Exporter index.json</button>
+    <button class="btn btn-orange" id="btn-save" onclick="sauvegarder()" style="display:none">✅ Sauvegarder</button>
+  </div>
+</div>
+
+<input type="file" id="fileInput" accept=".json" style="display:none" onchange="chargerFichier(this)">
+
+<div class="layout">
+  <!-- Sidebar -->
+  <div class="sidebar" id="sidebar">
+    <div class="sidebar-top">
+      <input type="text" id="recherche" placeholder="🔍 Rechercher commune, objet…" oninput="filtrer()">
+      <select id="filtreCat" onchange="filtrer()">
+        <option value="">Toutes les catégories</option>
+        <option value="actes-administratifs">Actes administratifs</option>
+        <option value="domaine-public">Domaine public et voirie</option>
+        <option value="dechets-environnement">Déchets et environnement</option>
+        <option value="hebergement-tourisme">Hébergement / Tourisme</option>
+        <option value="commerce-economie">Commerce / Économie</option>
+        <option value="inhumation">Inhumation et cimetière</option>
+        <option value="animaux">Animaux</option>
+        <option value="immondices">Immondices</option>
+        <option value="location-salle">Location salle / matériel</option>
+        <option value="mobilite">Mobilité</option>
+        <option value="impots">Impôts</option>
+      </select>
+      <select id="filtreQualite" onchange="filtrer()">
+        <option value="">Tous les statuts</option>
+        <option value="bonne">✅ Validés</option>
+        <option value="partielle">⚠️ À compléter</option>
+        <option value="insuffisante">❌ Insuffisants</option>
+      </select>
+      <div class="stats" id="stats"></div>
+    </div>
+    <div id="liste"></div>
+  </div>
+
+  <!-- Éditeur -->
+  <div class="editor" id="editor">
+    <div id="import-view">
+      <div class="import-zone" onclick="document.getElementById('fileInput').click()">
+        <div style="font-size:40px">📂</div>
+        <strong>Ouvrir index.json</strong>
+        <p>Généré par le script extraire_reglements.mjs</p>
+        <p style="margin-top:8px;font-size:12px;color:#9CA3AF">Le fichier reste sur votre machine — rien n'est envoyé.</p>
+      </div>
+    </div>
+    <div id="edit-view" style="display:none"></div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+let data = [], indexActif = -1, modifie = false;
+
+// ─── CHARGEMENT ────────────────────────────────────────────────────────────
+function chargerFichier(input) {
+  const f = input.files[0]; if (!f) return;
+  const r = new FileReader();
+  r.onload = e => {
+    try {
+      data = JSON.parse(e.target.result);
+      document.getElementById('hdr-info').textContent = `${data.length} règlements · ${f.name}`;
+      document.getElementById('btn-export').style.display = '';
+      document.getElementById('import-view').style.display = 'none';
+      document.getElementById('edit-view').style.display = '';
+      afficherListe(); mettreAJourStats();
+      toast(`✅ ${data.length} règlements chargés`);
+    } catch { toast("❌ Fichier JSON invalide"); }
+  };
+  r.readAsText(f);
+}
+
+// ─── LISTE ─────────────────────────────────────────────────────────────────
+function filtrer() {
+  const q = document.getElementById('recherche').value.toLowerCase();
+  const cat = document.getElementById('filtreCat').value;
+  const qual = document.getElementById('filtreQualite').value;
+  afficherListe(data.filter(r =>
+    (!q   || (r.commune+r.objet+r.mots_cles?.join(' ')).toLowerCase().includes(q)) &&
+    (!cat  || r.categorie === cat) &&
+    (!qual || r.qualite === qual)
+  ));
+}
+
+function afficherListe(items) {
+  items = items || data;
+  const div = document.getElementById('liste'); div.innerHTML = '';
+  if (!items.length) { div.innerHTML = '<p style="padding:20px;color:#6B7280;font-size:13px">Aucun résultat</p>'; return; }
+  items.forEach(r => {
+    const idx = data.indexOf(r);
+    const el = document.createElement('div');
+    el.className = 'list-item' + (idx === indexActif ? ' active' : '');
+    el.onclick = () => ouvrirReglement(idx);
+    const badgeQ = r.qualite === 'bonne' ? 'badge-ok' : r.qualite === 'insuffisante' ? 'badge-bad' : 'badge-todo';
+    const icQ = r.qualite === 'bonne' ? '✅' : r.qualite === 'insuffisante' ? '❌' : '⚠️';
+    const valide = r.points_forts_valides ? '🔒' : '';
+    el.innerHTML = `
+      <div class="commune">${r.commune || '?'} ${valide}</div>
+      <div class="meta">
+        <span class="badge badge-${r.type||'taxe'}">${r.type||'?'}</span>
+        <span class="badge ${badgeQ}">${icQ}</span>
+        ${r.annee||''}
+      </div>
+      <div class="meta" style="margin-top:2px">${r.objet||''}</div>`;
+    div.appendChild(el);
+  });
+}
+
+// ─── ÉDITEUR ───────────────────────────────────────────────────────────────
+function ouvrirReglement(idx) {
+  if (modifie && indexActif !== idx) {
+    if (!confirm("Des modifications non sauvegardées existent. Continuer ?")) return;
+    modifie = false;
+  }
+  indexActif = idx;
+  const r = data[idx];
+  document.getElementById('btn-save').style.display = '';
+
+  const pfHTML = (r.points_forts||[]).map((pf,i) => `
+    <li class="pf-item">
+      <input type="text" value="${esc(pf)}" id="pf_${i}" onchange="modifState()">
+      <button class="btn-del" onclick="supprimerPF(${i})">✕</button>
+    </li>`).join('');
+
+  document.getElementById('edit-view').innerHTML = `
+    <div class="card">
+      <h3>Identification</h3>
+      <div class="grid2">
+        <div class="field"><label>Commune</label><input id="f_commune" value="${esc(r.commune||'')}" onchange="modifState()"></div>
+        <div class="field"><label>Type</label>
+          <select id="f_type" onchange="modifState()">
+            <option value="taxe" ${r.type==='taxe'?'selected':''}>Taxe</option>
+            <option value="redevance" ${r.type==='redevance'?'selected':''}>Redevance</option>
+          </select>
+        </div>
+        <div class="field"><label>Année d'adoption</label><input id="f_annee" type="number" value="${r.annee||''}" onchange="modifState()"></div>
+        <div class="field"><label>Période (ex. 2026-2031)</label><input id="f_periode" value="${esc(r.periode||'')}" onchange="modifState()"></div>
+      </div>
+      <div class="field"><label>Objet</label><input id="f_objet" value="${esc(r.objet||'')}" onchange="modifState()"></div>
+      <div class="field"><label>Catégorie</label>
+        <select id="f_categorie" onchange="modifState()">
+          <option value="actes-administratifs" ${r.categorie==='actes-administratifs'?'selected':''}>Actes administratifs</option>
+          <option value="domaine-public" ${r.categorie==='domaine-public'?'selected':''}>Domaine public</option>
+          <option value="dechets-environnement" ${r.categorie==='dechets-environnement'?'selected':''}>Déchets / Environnement</option>
+          <option value="hebergement-tourisme" ${r.categorie==='hebergement-tourisme'?'selected':''}>Hébergement / Tourisme</option>
+          <option value="commerce-economie" ${r.categorie==='commerce-economie'?'selected':''}>Commerce / Économie</option>
+          <option value="inhumation" ${r.categorie==='inhumation'?'selected':''}>Inhumation et cimetière</option>
+          <option value="animaux" ${r.categorie==='animaux'?'selected':''}>Animaux</option>
+          <option value="immondices" ${r.categorie==='immondices'?'selected':''}>Immondices</option>
+          <option value="location-salle" ${r.categorie==='location-salle'?'selected':''}>Location salle</option>
+          <option value="mobilite" ${r.categorie==='mobilite'?'selected':''}>Mobilité</option>
+          <option value="impots" ${r.categorie==='impots'?'selected':''}>Impôts</option>
+        </select>
+      </div>
+      <div class="field"><label>Mots-clés (séparés par des virgules)</label>
+        <input id="f_mots" value="${esc((r.mots_cles||[]).join(', '))}" onchange="modifState()">
+      </div>
+    </div>
+
+    <div class="card">
+      <h3>⭐ Points forts juridiques <span style="font-weight:400;font-size:12px;color:#6B7280">(à valider / enrichir)</span></h3>
+      <ul class="pf-list" id="pf-list">${pfHTML}</ul>
+      <button class="btn-add" onclick="ajouterPF()">+ Ajouter un point fort</button>
+      <div style="margin-top:14px">
+        <label style="display:flex;align-items:center;gap:8px;cursor:pointer;font-size:13px">
+          <input type="checkbox" id="f_valide" ${r.points_forts_valides?'checked':''} onchange="modifState()">
+          🔒 Points forts validés par un juriste Vanden Broele
+        </label>
+      </div>
+    </div>
+
+    <div class="card">
+      <h3>Qualité de l'extraction automatique</h3>
+      <div class="qualite-btns">
+        <button class="qbtn bonne ${r.qualite==='bonne'?'active':''}" onclick="setQualite('bonne')">✅ Bonne</button>
+        <button class="qbtn partielle ${r.qualite==='partielle'?'active':''}" onclick="setQualite('partielle')">⚠️ Partielle</button>
+        <button class="qbtn insuffisante ${r.qualite==='insuffisante'?'active':''}" onclick="setQualite('insuffisante')">❌ Insuffisante</button>
+      </div>
+    </div>
+
+    <div class="card">
+      <h3>Extrait du règlement <span style="font-weight:400;font-size:12px;color:#6B7280">(lecture seule)</span></h3>
+      <div class="extrait-box">${esc(r.extrait||'(vide)')}</div>
+    </div>
+  `;
+
+  // Mettre en surbrillance l'item actif dans la liste
+  document.querySelectorAll('.list-item').forEach((el,i) => {
+    const items = data.filter((_, ii) => {
+      const q = document.getElementById('recherche').value.toLowerCase();
+      const cat = document.getElementById('filtreCat').value;
+      const qual = document.getElementById('filtreQualite').value;
+      return (!q||(data[ii].commune+data[ii].objet).toLowerCase().includes(q)) &&
+             (!cat||data[ii].categorie===cat) && (!qual||data[ii].qualite===qual);
+    });
+    if (items[i] && data.indexOf(items[i]) === idx) el.classList.add('active');
+    else el.classList.remove('active');
+  });
+}
+
+// ─── POINTS FORTS ──────────────────────────────────────────────────────────
+function ajouterPF() {
+  const r = data[indexActif];
+  r.points_forts = r.points_forts || [];
+  r.points_forts.push('');
+  ouvrirReglement(indexActif);
+  modifie = true;
+  // Focus sur le dernier champ
+  setTimeout(() => {
+    const inputs = document.querySelectorAll('#pf-list input');
+    if (inputs.length) inputs[inputs.length-1].focus();
+  }, 50);
+}
+
+function supprimerPF(i) {
+  data[indexActif].points_forts.splice(i, 1);
+  modifie = true;
+  ouvrirReglement(indexActif);
+}
+
+function setQualite(q) {
+  data[indexActif].qualite = q;
+  document.querySelectorAll('.qbtn').forEach(b => {
+    b.classList.toggle('active', b.classList.contains(q));
+  });
+  modifie = true;
+}
+
+// ─── SAUVEGARDE ────────────────────────────────────────────────────────────
+function sauvegarder() {
+  if (indexActif < 0) return;
+  const r = data[indexActif];
+  r.commune    = document.getElementById('f_commune').value.trim();
+  r.type       = document.getElementById('f_type').value;
+  r.annee      = parseInt(document.getElementById('f_annee').value) || null;
+  r.periode    = document.getElementById('f_periode').value.trim() || null;
+  r.objet      = document.getElementById('f_objet').value.trim();
+  r.categorie  = document.getElementById('f_categorie').value;
+  r.mots_cles  = document.getElementById('f_mots').value.split(',').map(s=>s.trim()).filter(Boolean);
+  r.points_forts_valides = document.getElementById('f_valide').checked;
+  // Récupérer les points forts depuis les inputs
+  const pfInputs = document.querySelectorAll('#pf-list input');
+  r.points_forts = Array.from(pfInputs).map(i=>i.value.trim()).filter(Boolean);
+
+  modifie = false;
+  afficherListe(); mettreAJourStats();
+  toast('✅ Règlement sauvegardé');
+}
+
+// ─── EXPORT ────────────────────────────────────────────────────────────────
+function exporterJSON() {
+  // N'exporter que les règlements de qualité bonne ou partielle
+  const export_data = data.filter(r => r.qualite !== 'insuffisante');
+  const blob = new Blob([JSON.stringify(export_data, null, 2)], {type:'application/json'});
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = `index_valide_${new Date().toISOString().slice(0,10)}.json`;
+  a.click();
+  toast(`💾 ${export_data.length} règlements exportés (insuffisants exclus)`);
+}
+
+// ─── STATS ─────────────────────────────────────────────────────────────────
+function mettreAJourStats() {
+  const ok = data.filter(r=>r.qualite==='bonne').length;
+  const todo = data.filter(r=>r.qualite==='partielle').length;
+  const bad = data.filter(r=>r.qualite==='insuffisante').length;
+  const valides = data.filter(r=>r.points_forts_valides).length;
+  document.getElementById('stats').innerHTML = `
+    <div class="stat"><div class="n" style="color:#15803D">${ok}</div><div class="l">Bons</div></div>
+    <div class="stat"><div class="n" style="color:#D97706">${todo}</div><div class="l">À compléter</div></div>
+    <div class="stat"><div class="n" style="color:#DC2626">${bad}</div><div class="l">Insuffisants</div></div>
+    <div class="stat"><div class="n" style="color:#1A3A5C">${valides}</div><div class="l">Validés 🔒</div></div>`;
+}
+
+// ─── UTILITAIRES ───────────────────────────────────────────────────────────
+function modifState() { modifie = true; }
+function esc(s) { return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/"/g,'&quot;'); }
+
+let toastTimer;
+function toast(msg) {
+  const el = document.getElementById('toast');
+  el.textContent = msg; el.classList.add('show');
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(()=>el.classList.remove('show'), 2800);
+}
+
+window.onbeforeunload = () => modifie ? "Modifications non sauvegardées." : undefined;
+</script>
+</body>
+</html>
