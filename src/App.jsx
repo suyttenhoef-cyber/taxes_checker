@@ -655,12 +655,14 @@ function verifier(t) {
   });
 }
 
-function buildSystemPrompt(dateSeance, listePresents, listeAbsents) {
-  const dateStr = dateSeance
+function buildSystemPrompt(dateSeance, listePresents, listeAbsents, nomDG, nomBourg) {
+  const dateStr  = dateSeance
     ? new Date(dateSeance).toLocaleDateString("fr-BE", {day:"numeric", month:"long", year:"numeric"})
     : "[DATE DE LA SÉANCE]";
-  const presStr = listePresents || "[LISTE DES CONSEILLERS PRÉSENTS]";
-  const absStr  = listeAbsents  || "Néant";
+  const presStr  = listePresents || "[LISTE DES CONSEILLERS PRÉSENTS]";
+  const absStr   = listeAbsents  || "Néant";
+  const dgStr    = nomDG   || "[NOM ET SIGNATURE DG]";
+  const bourgStr = nomBourg || "[NOM ET SIGNATURE BOURGMESTRE]";
   return `Tu es un expert en droit communal wallon travaillant pour Vanden Broele.
 Tu rédiges des règlements communaux wallons complets et conformes à la législation wallonne.
 
@@ -707,18 +709,18 @@ Par le Conseil communal,
 
 Le(La) Directeur(trice) général(e),          Le(La) Bourgmestre,
 
-[NOM ET SIGNATURE DG]                         [NOM ET SIGNATURE BOURGMESTRE]
+${dgStr}                         ${bourgStr}
 
 
 Pour extrait conforme délivré le [DATE]`;
 }
 
-function buildMessages(p, refs, mandataires, presences) {
+function buildMessages(p, refs, mandataires, presences, profil) {
   const nomM = m => `${m.detail_civilite||""} ${m.detail_prenom||""} ${m.detail_nom||""}`.trim();
   const bourg = mandataires.find(m => /bourgmestre/i.test(m.detail_fonction));
   const bourgNom = bourg ? nomM(bourg) : "[NOM BOURGMESTRE]";
-  const dirGen = mandataires.find(m => /directeur|directrice\s+g[eé]n[eé]ral/i.test(m.detail_fonction));
-  const dirGenNom = dirGen ? nomM(dirGen) : "[NOM DIRECTEUR GÉNÉRAL]";
+  const dirGen = mandataires.find(m => /directeur\s*(trice)?\s*g[eé]n[eé]ral/i.test(m.detail_fonction));
+  const dirGenNom = dirGen ? nomM(dirGen) : (profil?.nomDG || "[NOM DIRECTEUR GÉNÉRAL]");
 
   // Listes présents / absents depuis les cases à cocher
   const conseil = mandataires.filter(m => !/directeur|directrice/i.test(m.detail_fonction));
@@ -798,7 +800,7 @@ RÈGLEMENTS DE RÉFÉRENCE VANDEN BROELE :
 ${pf.length>0?pf:"(aucune référence disponible — appliquer strictement les exigences légales ci-dessus)"}`;
 
   return [
-    { role: "system", content: buildSystemPrompt(p.dateSeance, listePresents, listeAbsents) },
+    { role: "system", content: buildSystemPrompt(p.dateSeance, listePresents, listeAbsents, dirGenNom, bourgNom) },
     { role: "user",   content: userContent },
   ];
 }
@@ -1425,13 +1427,17 @@ function PanelProfil({ profil, onSave, onClose }) {
 export default function App() {
   const [onglet, setOnglet] = useState("generer");
   const [biblio, setBiblio] = useState(()=>mergerBiblio());
-  const [params, setParams] = useState({
-    commune:"", ins:"", cp:"", province:"", arrondissement:"", population:null,
-    nomCourt:"", adresse:"", emailGeneral:"", telephone:"",
-    typeReglement:"taxe", sousTypeRedevance:"autorisation", categorie:"", sousCat:"", objet:"", dateSeance:"",
-    periodeDebut: String(new Date().getFullYear()+1),
-    periodeFin:   String(new Date().getFullYear()+6),
-    redevable:"", tarif:"", exonerations:"", infoCompl:"",
+  const [params, setParams] = useState(() => {
+    const pr = chargerProfil();
+    return {
+      commune: pr.nomCommune||"", ins: pr.ins||"", cp:"",
+      province: pr.province||"", arrondissement: pr.arrondissement||"", population:null,
+      nomCourt:"", adresse:"", emailGeneral:"", telephone:"",
+      typeReglement:"taxe", sousTypeRedevance:"autorisation", categorie:"", sousCat:"", objet:"", dateSeance:"",
+      periodeDebut: String(new Date().getFullYear()+1),
+      periodeFin:   String(new Date().getFullYear()+6),
+      redevable:"", tarif:"", exonerations:"", infoCompl:"",
+    };
   });
   const [mandataires, setMandataires] = useState([]);
   const [mandLoading, setMandLoading] = useState(false);
@@ -1451,11 +1457,29 @@ export default function App() {
 
   const upd = (k,v) => setParams(p=>({...p,[k]:v}));
 
+  // Auto-chargement des mandataires si l'INS est déjà connu via le profil
+  useEffect(() => {
+    const pr = chargerProfil();
+    if (pr.ins) {
+      setMandLoading(true);
+      getMandataires(pr.ins)
+        .then(m => { setMandataires(m); setPresences({}); })
+        .catch(() => {})
+        .finally(() => setMandLoading(false));
+    }
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
+
   const pickCommune = async c => {
     setParams(p=>({...p, commune:c.nom, ins:c.ins||"", cp:c.cp||"",
       province:"", arrondissement:"", nomCourt:c.nom_court||"",
       adresse:c.adresse||"", emailGeneral:c.email_general||"", telephone:c.telephone||"", population:null}));
     setMandataires([]); setPresences({});
+    // Persister l'INS dans le profil pour l'auto-chargement au prochain démarrage
+    if (c.ins) {
+      const updProfil = { ...profil, ins: c.ins };
+      setProfil(updProfil);
+      sauverProfil(updProfil);
+    }
     if (!c.ins) return;
     setMandLoading(true);
     try {
@@ -1475,7 +1499,7 @@ export default function App() {
       const res = await fetch(`${WORKER_URL}/openai/v1/chat/completions`, {
         method:"POST", headers:{"Content-Type":"application/json"},
         body: JSON.stringify({model:"gpt-4o", max_tokens:6000, stream:true,
-          messages:buildMessages(params,refs,mandataires,presences)}),
+          messages:buildMessages(params,refs,mandataires,presences,profil)}),
       });
       if (!res.ok) { const e=await res.text(); throw new Error(`API ${res.status} : ${e}`); }
       const reader=res.body.getReader(), dec=new TextDecoder();
