@@ -519,9 +519,11 @@ Art. 2   — Redevable et fait générateur
 Art. 3   — Montant (${p.tarif})${p.exonerations?" avec les exonérations suivantes : "+p.exonerations:""}
 Art. 4   — Déclaration : formulaire communal, délai 15 jours, obligation spontanée au 31 janvier
 Art. 5   — Taxation d'office en cas de défaut (L3321-6 CDLD) : majoration de 20 %
-Art. 6   — Paiement par voie de rôle, délai 2 mois
-Art. 7   — Recouvrement (L3321-1 à L3321-12 CDLD, AR 12/04/1999) avec sommation recommandée (L3321-8bis)
-Art. 8   — Réclamation dans les 6 mois (L3321-9 CDLD — ordre public), par recommandé au Collège, sous peine de déchéance
+${p.typeReglement==="redevance"
+  ? "Art. 6   — Mode de perception et exigibilité : redevance exigible dès l'obtention de l'autorisation, payable au comptant à la caisse communale contre reçu ; à défaut, payable dans les 30 jours suivant la réception de l'invitation à payer, intérêts légaux de plein droit"
+  : "Art. 6   — Paiement par voie de rôle, délai 2 mois à compter de l'envoi de l'avertissement-extrait de rôle"}
+Art. 7   — Recouvrement${p.typeReglement==="redevance" ? " par voie de contrainte (L1124-40 §1er CDLD), mise en demeure recommandée préalable, frais à charge du débiteur" : " (L3321-1 à L3321-12 CDLD, AR 12/04/1999) avec sommation recommandée (L3321-8bis)"}
+Art. 8   — Réclamation dans les 6 mois (L3321-9 CDLD — ordre public), par recommandé au Collège, sous peine de déchéance${p.typeReglement==="redevance" ? " ; délai de 3 mois pour statuer, accusé de réception dans les 8 jours, décision notifiée par recommandé" : ""}
 Art. 9   — Protection des données (RGPD) : responsable = ${p.commune||"la commune"}, finalité fiscale, conservation 30 ans
 Art. 10  — Tutelle : Gouvernement wallon, L3131-1 et suivants, tutelle spéciale d'approbation
 Art. 11  — Publication et entrée en vigueur (L1133-1 et L1133-2 CDLD)
@@ -1042,19 +1044,25 @@ export default function App() {
     try {
       const res = await fetch(`${WORKER_URL}/openai/v1/chat/completions`, {
         method:"POST", headers:{"Content-Type":"application/json"},
-        body: JSON.stringify({model:"gpt-4o", max_tokens:4000, stream:true,
+        body: JSON.stringify({model:"gpt-4o", max_tokens:6000, stream:true,
           messages:buildMessages(params,refs,mandataires)}),
       });
       if (!res.ok) { const e=await res.text(); throw new Error(`API ${res.status} : ${e}`); }
       const reader=res.body.getReader(), dec=new TextDecoder();
+      let buf="";
+      const processLine = line => {
+        if(!line.startsWith("data: ")) return;
+        const d=line.slice(6).trim(); if(d==="[DONE]") return;
+        try{ const delta=JSON.parse(d)?.choices?.[0]?.delta?.content||""; if(delta){streamRef.current+=delta; setTexteGenere(streamRef.current);} }catch{}
+      };
       while(true){
         const {done,value}=await reader.read(); if(done) break;
-        for(const line of dec.decode(value,{stream:true}).split("\n")){
-          if(!line.startsWith("data: ")) continue;
-          const d=line.slice(6).trim(); if(d==="[DONE]") break;
-          try{ const delta=JSON.parse(d)?.choices?.[0]?.delta?.content||""; if(delta){streamRef.current+=delta; setTexteGenere(streamRef.current);} }catch{}
-        }
+        buf += dec.decode(value,{stream:true});
+        const lines=buf.split("\n");
+        buf=lines.pop(); // conserver la ligne incomplète pour le prochain chunk
+        lines.forEach(processLine);
       }
+      if(buf) processLine(buf); // traiter l'éventuel reste
       setEtape("resultat");
     } catch(e){ setErreur(`Erreur : ${e.message}`); setEtape("formulaire"); }
     finally{ setLoading(false); }
