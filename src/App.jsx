@@ -12,95 +12,239 @@ const C = {
 };
 
 const CATEGORIES = [
+  // ── Additionnels ──────────────────────────────────────────────────────────
+  { slug:"impots", label:"Centimes additionnels", sous:[
+    { slug:"add-ipp",         label:"Additionnels à l'impôt des personnes physiques (IPP)" },
+    { slug:"add-pi",          label:"Additionnels au précompte immobilier" },
+    { slug:"add-circulation", label:"Décime additionnel à la taxe de circulation" },
+  ]},
+  // ── Actes administratifs ──────────────────────────────────────────────────
   { slug:"actes-administratifs", label:"Actes administratifs et état civil", sous:[
-    { slug:"actes-documents",    label:"Délivrance de documents (extraits, copies actes d'état civil)" },
-    { slug:"actes-urbanisme",    label:"Renseignements urbanistiques et copies de plans" },
-    { slug:"actes-legalisation", label:"Légalisations de signatures et apostilles" },
+    { slug:"actes-documents",   label:"Délivrance de documents administratifs et état civil" },
+    { slug:"actes-nom-prenom",  label:"Changement de nom et/ou de prénom" },
+    { slug:"actes-mariage",     label:"Constitution de dossiers de mariage et nationalité" },
+    { slug:"actes-passeport",   label:"Passeports, cartes d'identité et titres de séjour" },
+    { slug:"actes-legalisation",label:"Légalisations de signatures et apostilles" },
   ]},
+  // ── Urbanisme ─────────────────────────────────────────────────────────────
+  { slug:"urbanisme-permis", label:"Urbanisme, permis et environnement", sous:[
+    { slug:"urb-permis-urba",  label:"Permis d'urbanisme et certificats d'urbanisme" },
+    { slug:"urb-permis-urban", label:"Permis d'urbanisation (constructions groupées)" },
+    { slug:"urb-permis-envir", label:"Permis d'environnement (classe 3)" },
+    { slug:"urb-implantation", label:"Vérification des implantations et procès-verbaux" },
+    { slug:"urb-rens-urba",    label:"Renseignements urbanistiques et copies de plans" },
+  ]},
+  // ── Domaine public ────────────────────────────────────────────────────────
   { slug:"domaine-public", label:"Domaine public et voirie", sous:[
-    { slug:"domaine-terrasses",  label:"Terrasses horeca sur voirie" },
-    { slug:"domaine-chantiers",  label:"Chantiers et installations temporaires" },
-    { slug:"domaine-enseignes",  label:"Enseignes saillantes et présentoirs" },
-    { slug:"domaine-etalages",   label:"Étalages et marchands ambulants" },
-    { slug:"domaine-depots",     label:"Dépôts et encombrants sur voirie" },
+    { slug:"domaine-terrasses", label:"Terrasses horeca sur voirie" },
+    { slug:"domaine-chantiers", label:"Chantiers et installations temporaires" },
+    { slug:"domaine-enseignes", label:"Enseignes saillantes et présentoirs" },
+    { slug:"domaine-etalages",  label:"Étalages et marchands ambulants" },
+    { slug:"domaine-depots",    label:"Dépôts et encombrants sur voirie" },
+    { slug:"domaine-comm",      label:"Occupation à des fins commerciales ou publicitaires" },
+    { slug:"domaine-affiches",  label:"Enlèvement d'affiches apposées en lieux non autorisés" },
+    { slug:"domaine-versages",  label:"Enlèvement des versages sauvages" },
   ]},
+  // ── Marchés et foires ─────────────────────────────────────────────────────
+  { slug:"marches-foires", label:"Marchés, foires et kermesses", sous:[
+    { slug:"marche-hebdo",    label:"Marchés hebdomadaires et marchés bio" },
+    { slug:"marche-foire",    label:"Foires saisonnières et marchés spéciaux" },
+    { slug:"marche-kermesse", label:"Kermesses, braderies et fêtes foraines" },
+    { slug:"marche-fleurs",   label:"Vente de fleurs et droits de place spéciaux" },
+  ]},
+  // ── Mobilité ──────────────────────────────────────────────────────────────
+  { slug:"mobilite", label:"Mobilité et stationnement", sous:[
+    { slug:"mob-zone-bleue",     label:"Stationnement zones bleues et horodateurs" },
+    { slug:"mob-parking-comm",   label:"Parking communal payant / carte de riverain" },
+    { slug:"mob-parking-priv",   label:"Exploitation de parkings privés payants ouverts au public" },
+    { slug:"mob-absence-parc",   label:"Absence d'emplacement de parcage (obligation légale)" },
+    { slug:"mob-veh-abandonnes", label:"Véhicules abandonnés et dépôts de mitraille" },
+    { slug:"mob-taxis",          label:"Exploitation d'un service de taxis" },
+    { slug:"mob-force-motrice",  label:"Force motrice (utilisation de la voirie publique)" },
+    { slug:"mob-boxes-velos",    label:"Boxes à vélos et stationnement cycles" },
+    { slug:"mob-veh-electr",     label:"Recharge véhicules électriques à borne communale" },
+  ]},
+  // ── Immobilier ────────────────────────────────────────────────────────────
   { slug:"immobilier", label:"Immobilier et logement", sous:[
-    { slug:"immo-inoccupe",         label:"Logements inoccupés / abandonnés (Décr. 06/02/2014)" },
-    { slug:"immo-non-bati",         label:"Terrains non bâtis en zone urbanisée" },
-    { slug:"immo-seconde-residence",label:"Secondes résidences et résidences de tourisme" },
-    { slug:"immo-parking",          label:"Emplacements de parking privés" },
+    { slug:"immo-inoccupe",          label:"Logements inoccupés / abandonnés (Décr. 06/02/2014)" },
+    { slug:"immo-non-bati",          label:"Terrains non bâtis et parcelles en zone urbanisée" },
+    { slug:"immo-seconde-residence", label:"Secondes résidences et résidences de tourisme" },
+    { slug:"immo-loues-meubles",     label:"Logements loués meublés" },
+    { slug:"immo-surfaces-comm",     label:"Surfaces commerciales et implantations commerciales" },
+    { slug:"immo-surfaces-bureaux",  label:"Surfaces de bureaux" },
+    { slug:"immo-piscines-priv",     label:"Piscines privées" },
   ]},
+  // ── Commerce et économie ──────────────────────────────────────────────────
   { slug:"commerce-economie", label:"Commerce et activités économiques", sous:[
-    { slug:"com-horeca-nuit",    label:"Établissements ouverts la nuit (discothèques, bars tardifs)" },
-    { slug:"com-distributeurs",  label:"Distributeurs automatiques (boissons, tabac, services)" },
-    { slug:"com-publicite",      label:"Panneaux publicitaires et affiches commerciales" },
-    { slug:"com-antennes",       label:"Antennes, pylônes et infrastructures télécom / 5G" },
-    { slug:"com-guichets",       label:"Guichets automatiques bancaires (ATM)" },
-    { slug:"com-night-shops",    label:"Night-shops et commerces à horaires décalés" },
+    { slug:"com-horeca-nuit",     label:"Établissements ouverts la nuit (bars tardifs, discothèques)" },
+    { slug:"com-debits-boissons", label:"Débits de boissons fermentées et assimilés" },
+    { slug:"com-dancings",        label:"Dancings, clubs privés et bals publics" },
+    { slug:"com-spectacles",      label:"Spectacles, cinéma, divertissements et agences de paris" },
+    { slug:"com-night-shops",     label:"Night-shops, phone shops et commerces à horaires décalés" },
+    { slug:"com-cannabis",        label:"Cannabis shops et commerces assimilés" },
+    { slug:"com-frites",          label:"Commerces de frites et produits comparables" },
+    { slug:"com-guichets",        label:"Établissements bancaires et guichets automatiques (ATM)" },
+    { slug:"com-distributeurs",   label:"Distributeurs automatiques (boissons, tabac, services)" },
+    { slug:"com-antennes",        label:"Antennes, pylônes et infrastructures télécom / 5G" },
+    { slug:"com-taxis",           label:"Exploitation d'un service de taxis" },
+    { slug:"com-etabl-danger",    label:"Établissements dangereux, insalubres et incommodes (cl. 1-2)" },
   ]},
+  // ── Publicité ─────────────────────────────────────────────────────────────
+  { slug:"publicite-ecrits", label:"Publicité et communication", sous:[
+    { slug:"pub-panneaux",  label:"Panneaux publicitaires fixes et mobiles" },
+    { slug:"pub-enseignes", label:"Enseignes et publicités assimilées" },
+    { slug:"pub-ecrits",    label:"Distribution d'écrits publicitaires (toutes boîtes)" },
+    { slug:"pub-voie",      label:"Diffusion publicitaire sur la voie publique" },
+  ]},
+  // ── Tourisme ──────────────────────────────────────────────────────────────
   { slug:"hebergement-tourisme", label:"Tourisme et hébergement", sous:[
-    { slug:"tour-sejour",   label:"Taxe de séjour (par nuitée et par personne)" },
+    { slug:"tour-sejour",   label:"Taxe de séjour / taxe hôtelière (par nuitée et par personne)" },
     { slug:"tour-gites",    label:"Gîtes, meublés touristiques, B&B" },
     { slug:"tour-campings", label:"Campings, parcs résidentiels et caravaniers" },
   ]},
+  // ── Déchets ───────────────────────────────────────────────────────────────
   { slug:"dechets-environnement", label:"Déchets et environnement", sous:[
-    { slug:"dech-collecte",       label:"Collecte des ordures ménagères" },
-    { slug:"dech-dechetterie",    label:"Accès à la déchetterie communale" },
-    { slug:"dech-deversements",   label:"Déversements dans les égouts et cours d'eau" },
-    { slug:"dech-encombrants",    label:"Enlèvement d'encombrants à domicile" },
+    { slug:"dech-collecte",    label:"Collecte des ordures ménagères et déchets assimilés" },
+    { slug:"dech-sacs",        label:"Sacs poubelles, sacs PMC et bio" },
+    { slug:"dech-conteneurs",  label:"Conteneurs pour collectes spécifiques" },
+    { slug:"dech-encombrants", label:"Enlèvement des encombrants et déchets extraordinaires" },
+    { slug:"dech-versages",    label:"Enlèvement des versages sauvages" },
+    { slug:"dech-dechetterie", label:"Accès à la déchetterie communale" },
+    { slug:"dech-organique",   label:"Collecte et traitement des déchets organiques" },
   ]},
+  // ── Infrastructure ────────────────────────────────────────────────────────
+  { slug:"infrastructure-reseaux", label:"Infrastructure et réseaux", sous:[
+    { slug:"infra-egouts",   label:"Raccordement aux égouts (avec ou sans traversée de voirie)" },
+    { slug:"infra-eau",      label:"Raccordement et consommation eau de distribution publique" },
+    { slug:"infra-elec",     label:"Raccordement à un coffret électrique communal" },
+    { slug:"infra-borne-ev", label:"Recharge véhicules électriques à borne communale" },
+  ]},
+  // ── Énergie et industrie ──────────────────────────────────────────────────
+  { slug:"energie-industrie", label:"Énergie et industrie extractive", sous:[
+    { slug:"ener-eoliennes",     label:"Éoliennes à production industrielle d'électricité" },
+    { slug:"ener-mats",          label:"Mâts éoliens et infrastructures de grande hauteur" },
+    { slug:"ener-mines",         label:"Mines, minières et carrières" },
+    { slug:"ener-photovolt",     label:"Installations photovoltaïques industrielles" },
+  ]},
+  // ── Funéraire ─────────────────────────────────────────────────────────────
   { slug:"inhumation", label:"Funéraire et cimetières", sous:[
-    { slug:"fun-inhumation",  label:"Inhumations, exhumations et transferts de corps" },
-    { slug:"fun-concessions", label:"Concessions de sépultures (tombes, caveaux, columbarium)" },
-    { slug:"fun-entretien",   label:"Entretien de tombes et fleurissement" },
-    { slug:"fun-columbarium", label:"Columbariums et ossuaires" },
+    { slug:"fun-inhumation",    label:"Inhumations, dispersions des cendres et mises en columbarium" },
+    { slug:"fun-concessions",   label:"Concessions de sépultures (pleine terre, caveaux, cavurnes)" },
+    { slug:"fun-renouvellement",label:"Renouvellement de concessions" },
+    { slug:"fun-exhumation",    label:"Exhumations, translations et ouvertures de caveaux" },
+    { slug:"fun-caveau-attente",label:"Caveau d'attente" },
+    { slug:"fun-columbarium",   label:"Columbariums, ossuaires et cellules cinéraires" },
+    { slug:"fun-prestations",   label:"Prestations diverses liées aux cimetières" },
+    { slug:"fun-plaques",       label:"Plaques commémoratives et stèles mémorielles" },
   ]},
+  // ── Enseignement ──────────────────────────────────────────────────────────
+  { slug:"enseignement-jeunesse", label:"Enseignement et jeunesse", sous:[
+    { slug:"ens-extrascolaire", label:"Accueil extrascolaire (ATL)" },
+    { slug:"ens-repas",         label:"Repas scolaires et distribution de repas / potage" },
+    { slug:"ens-frais",         label:"Frais scolaires divers" },
+    { slug:"ens-academie",      label:"Inscription à l'académie de musique" },
+  ]},
+  // ── Équipements communaux ─────────────────────────────────────────────────
   { slug:"location-salle", label:"Équipements et services communaux", sous:[
-    { slug:"equip-salles",       label:"Location de salles et locaux communaux" },
-    { slug:"equip-materiel",     label:"Location de matériel communal (podiums, barrières, sono)" },
-    { slug:"equip-sport",        label:"Infrastructures sportives (terrains, gymnases, courts)" },
-    { slug:"equip-piscine",      label:"Piscine communale" },
-    { slug:"equip-bibliotheque", label:"Bibliothèque communale (inscriptions, prêts, amendes)" },
+    { slug:"equip-salles",    label:"Location de salles et locaux communaux" },
+    { slug:"equip-materiel",  label:"Location de matériel (podiums, barrières, Nadar, sono)" },
+    { slug:"equip-chapiteau", label:"Location de chapiteaux, tonnelles et structures éphémères" },
+    { slug:"equip-sport",     label:"Infrastructures sportives (terrains, gymnases, courts)" },
+    { slug:"equip-piscine",   label:"Piscine communale" },
+    { slug:"equip-golf",      label:"Golf et mini-golf communal" },
+    { slug:"equip-tech",      label:"Prestations techniques du département communal" },
   ]},
-  { slug:"mobilite", label:"Mobilité et stationnement", sous:[
-    { slug:"mob-parking",         label:"Parking communal payant / carte de riverain" },
-    { slug:"mob-force-motrice",   label:"Force motrice (utilisation de la voirie publique)" },
-    { slug:"mob-veh-abandonnes",  label:"Véhicules abandonnés sur voirie" },
+  // ── Culture ───────────────────────────────────────────────────────────────
+  { slug:"culture-bibliotheque", label:"Culture, bibliothèque et loisirs", sous:[
+    { slug:"cult-biblio",     label:"Bibliothèque communale (inscriptions, prêts, photocopies)" },
+    { slug:"cult-ludotheque", label:"Ludothèque (location jeux, déguisements)" },
+    { slug:"cult-musee",      label:"Musée communal" },
+    { slug:"cult-academie",   label:"Académie de musique (cours, instruments)" },
+    { slug:"cult-welcome",    label:"Welcome bags et accueil des nouveaux habitants" },
   ]},
+  // ── Animaux ───────────────────────────────────────────────────────────────
   { slug:"animaux", label:"Animaux", sous:[
-    { slug:"anim-chiens",   label:"Chiens (taxe ou redevance d'identification)" },
-    { slug:"anim-fourriere",label:"Fourrière animale" },
-    { slug:"anim-nuisibles",label:"Dératisation et nuisibles" },
+    { slug:"anim-chiens",    label:"Chiens (taxe ou redevance d'identification / divagation)" },
+    { slug:"anim-fourriere", label:"Fourrière animale et conservation" },
+    { slug:"anim-nuisibles", label:"Dératisation et nuisibles" },
   ]},
-  { slug:"impots", label:"Centimes additionnels", sous:[
-    { slug:"add-ipp", label:"Additionnels à l'impôt des personnes physiques (IPP)" },
-    { slug:"add-pi",  label:"Additionnels au précompte immobilier" },
+  // ── Divers ────────────────────────────────────────────────────────────────
+  { slug:"divers-prestations", label:"Divers prestations communales", sous:[
+    { slug:"div-mariages",    label:"Célébration de mariages" },
+    { slug:"div-plaques-num", label:"Plaques de numérotation des maisons" },
+    { slug:"div-hygiene",     label:"Prestations d'hygiène publique" },
+    { slug:"div-expulsion",   label:"Biens mis sur voie publique en exécution de jugements" },
+    { slug:"div-repas-pers",  label:"Repas confectionnés pour le personnel et associations" },
   ]},
 ];
 
 // Notes juridiques spécifiques par sous-catégorie — injectées dans le prompt
 const NOTES_SOUS_CAT = {
-  "immo-inoccupe": `Références spécifiques : Décret wallon du 6 février 2014 relatif à la taxation des logements et immeubles inoccupés (MW 26/02/2014). Inclure : définition légale de l'inoccupation (12 mois consécutifs sans occupation normale), procédure de constatation par le fonctionnaire communal, délai de contestation de la constatation (30 jours), cas d'exemption obligatoires (travaux autorisés par permis, cas de force majeure, succession non réglée < 2 ans, mise en vente récente), majoration progressive possible après la 1re année.`,
-  "immo-non-bati": `Références : CWATUPE / CoDT, art. 127 et suiv. Définir précisément les zones concernées (plan de secteur), les exemptions pour terrain agricole ou forestier, la procédure de relevé cadastral, la majoration si la situation perdure.`,
-  "immo-seconde-residence": `Définition : bien immobilier non occupé comme résidence principale au sens du Registre national. Inclure exemptions pour résidences de convalescence, définition de la période d'imposition, interaction avec la taxe de séjour si applicable.`,
-  "com-antennes": `Jurisprudence abondante — être précis. Différencier taxe sur l'emprise physique (pylône visible sur territoire) vs taxe sur les émetteurs. Référence : Cass. 10/06/2011. La taxe sur l'emprise physique du pylône est en principe admise ; la taxe sur la puissance émettrice est souvent annulée. Viser uniquement l'installation physique sur le territoire communal. Décret wallon du 3 avril 2014 sur les infrastructures télécom.`,
-  "com-publicite": `Préciser la définition du support publicitaire (face visible depuis la voie publique, superficie minimale), les exemptions (panneaux d'affichage électoraux, enseignes de commerce identifiant l'établissement). Si l'enseigne est fixée au bâtiment : voir domaine-enseignes. Si panneau détaché : taxe ou redevance selon le cas.`,
-  "tour-sejour": `Inclure obligatoirement : obligation de tenue d'un registre journalier des nuitées par l'exploitant, déclaration mensuelle ou trimestrielle au Collège, solidarité de l'exploitant en cas de non-paiement par le client, exemptions (mineurs < 16 ans, séjours médicaux documentés, résidents permanents). Base légale : Décret wallon du 10 novembre 2016 relatif au tourisme.`,
-  "tour-gites": `Référence au Décret wallon du 10 novembre 2016 (hébergements touristiques). Inclure la définition de l'hébergement touristique (capacité d'accueil, durée < 3 mois), l'attestation de classement ou d'enregistrement CGT, les exemptions pour gîtes classés 1 épis.`,
-  "tour-campings": `Référence au Décret wallon du 10 novembre 2016. Distinguer emplacements avec résidence permanente vs séjours touristiques. Inclure la définition des résidents à l'année (taxe sur secondes résidences plutôt que séjour).`,
-  "fun-concessions": `Inclure : tableau des durées de concession (10, 20, 30 ans ou perpétuelle selon le règlement communal), procédure de renouvellement express avant expiration avec notification recommandée, clause de déchéance en cas d'abandon manifeste (mauvais entretien constaté > 2 ans), droit de reprise après déchéance. Différencier redevance initiale vs renouvellement.`,
-  "fun-columbarium": `Préciser : emplacement dans le columbarium (cases numérotées), durée de concession, conditions d'accès (restrictions aux cendres légalement obtenues), règles de mention sur la plaque, coûts d'installation de la plaque.`,
-  "domaine-terrasses": `Inclure obligatoirement : plan ou croquis de l'occupation joint à la demande d'autorisation, dimensions exactes (m²), mobilier conforme au règlement communal de police, attestation d'assurance RC couvrant l'occupation du domaine public, période standard d'occupation (15 mars – 15 novembre sauf dérogation), renouvellement annuel tacite ou exprès. Visa L2213-1 CDLD.`,
-  "domaine-chantiers": `Inclure : emprise maximale autorisée, balisage et signalisation obligatoires (normes RGPPT), durée maximale sans prolongation, responsabilité civile de l'entrepreneur, remise en état du domaine public après travaux.`,
-  "domaine-enseignes": `Différencier enseigne parallèle au mur (pas d'occupation supplémentaire) vs enseigne saillante (débord sur espace public). Seule la saillante génère une redevance ou taxe sur la base de l'occupation du domaine aérien.`,
-  "add-ipp": `Le règlement établit le taux en centimes additionnels à l'IPP ou en pourcentage de l'impôt État de base. Référence : art. 464 à 470bis CIR92. Préciser l'exercice d'imposition (revenus de l'année X = exercice X+1). Le taux est voté avant le 31 décembre de l'année précédant l'exercice.`,
-  "add-pi": `Le taux est exprimé en centimes additionnels au précompte immobilier. Référence : art. 251 à 259bis CIR92 + Code wallon de la taxation (décret 06/05/1999). Inclure l'assiette (revenu cadastral × taux PI de base × centimes additionnels).`,
-  "equip-salles": `Inclure : tableau tarifaire par type de salle et tranche horaire (soirée, week-end, journée), caution/dépôt de garantie remboursable, responsabilité du locataire pour dégradations, obligation de nettoyage ou facturation du nettoyage, priorité aux associations locales (tarif préférentiel), réservation par contrat de location.`,
-  "equip-sport": `Inclure : tableau tarifaire par type d'infrastructure et par heure, priorité aux clubs affiliés à la commune, conditions de réservation, règlement intérieur annexé, assurance des utilisateurs.`,
-  "dech-collecte": `Attention : dans la plupart des communes wallonnes, la collecte est assurée par une intercommunale (BEP, BEPN, IDELUX, TIBI, IPALLE, InBW…) qui facture directement. Si la commune gère en régie, inclure : fréquence de collecte, types de déchets couverts, modalités de calcul (par ménage, par volume).`,
-  "mob-force-motrice": `Note : cette taxe est en déclin. Elle frappe l'utilisation de la voirie communale par des véhicules de force (camions, tracteurs). Vérifier l'opportunité et les exceptions (agriculteurs, services publics). Référence : art. 173 et suivants LGCP.`,
-  "anim-chiens": `Note : la taxe communale sur les chiens a été supprimée dans de nombreuses communes wallonnes. Vérifier l'opportunité. Si maintenue : inclure exemptions (chiens d'assistance, éleveurs agréés, associations reconnues), déclaration annuelle en janvier, base de calcul par animal.`,
+  // ── Additionnels ────────────────────────────────────────────────────────
+  "add-ipp": `Le règlement établit le taux en centimes additionnels à l'IPP ou en % de l'impôt État de base. Référence : art. 464 à 470bis CIR92. Préciser l'exercice d'imposition (revenus de l'année X = exercice X+1). Le taux est voté avant le 31 décembre de l'année précédant l'exercice.`,
+  "add-pi":  `Le taux est exprimé en centimes additionnels au précompte immobilier. Référence : art. 251 à 259bis CIR92 + Code wallon de la taxation (décret 06/05/1999). Assiette : revenu cadastral × taux PI de base × centimes additionnels.`,
+  // ── Urbanisme ───────────────────────────────────────────────────────────
+  "urb-permis-urba": `Référence : CoDT, art. D.IV.56 et suiv. La redevance est perçue pour le traitement administratif du dossier (instruction, vérification, notification). Inclure : tableau tarifaire selon la nature des travaux (construction neuve, transformation, changement d'affectation), délai de traitement, exemptions (pouvoirs publics, logements sociaux). Ne pas confondre avec les taxes d'urbanisme régionales.`,
+  "urb-permis-envir": `Référence : Décret wallon du 11 mars 1999 relatif au permis d'environnement (DPEP). La redevance couvre l'instruction du dossier de classe 3. Inclure : délai d'instruction (30 jours), modalités de recours, exemptions pour exploitations agricoles < seuil.`,
+  "urb-implantation": `Redevance pour les prestations d'implantation de construction par le géomètre communal et l'établissement des procès-verbaux en résultant. Inclure : tarif par déplacement et par heure, délai de réalisation, responsabilité en cas d'erreur.`,
+  // ── Domaine public ──────────────────────────────────────────────────────
+  "domaine-terrasses": `Inclure obligatoirement : plan ou croquis joint à la demande, dimensions exactes (m²), mobilier conforme au règlement de police, attestation d'assurance RC, période standard (15 mars – 15 novembre sauf dérogation), renouvellement annuel. Visa L2213-1 CDLD.`,
+  "domaine-chantiers": `Inclure : emprise maximale, balisage et signalisation (RGPPT), durée maximale sans prolongation, responsabilité civile de l'entrepreneur, remise en état après travaux.`,
+  "domaine-enseignes": `Différencier enseigne parallèle au mur (pas d'occupation) vs enseigne saillante (débord sur espace public → redevance ou taxe sur domaine aérien).`,
+  "domaine-versages": `Inclure : procédure de constatation par le fonctionnaire communal, mise en demeure préalable, frais d'enlèvement à charge du responsable identifié, barème par volume (m³ ou camion).`,
+  // ── Marchés ─────────────────────────────────────────────────────────────
+  "marche-hebdo": `Inclure : règlement de marché annexé ou référencé, tarif par mètre linéaire ou par emplacement, priorité aux commerçants titulaires d'une carte ambulante (loi 25/06/1993), procédure d'attribution des emplacements, horaires, obligation de propreté.`,
+  "marche-foire": `Référence : loi du 25 juin 1993 sur l'exercice d'activités ambulantes. Inclure : dates des foires, tarif par emplacement (journalier ou sur la durée), conditions d'accès, assurance des forains.`,
+  // ── Mobilité ────────────────────────────────────────────────────────────
+  "mob-zone-bleue": `Préciser le périmètre de la zone bleue par référence au plan annexé ou au règlement complémentaire de circulation, la durée maximale de stationnement, la procédure de contrôle (agents constateurs), le tarif et la modalité (horodateur, disque). Référence : arrêté royal du 01/12/1975 (code de la route), art. 25.`,
+  "mob-absence-parc": `Certaines communes imposent aux propriétaires de bâtiments à usage de bureaux/commerces qui ne respectent pas les normes de parking prévues au plan communal d'aménagement une taxe compensatoire. Vérifier la base légale locale.`,
+  "mob-veh-abandonnes": `Inclure : définition du véhicule abandonné (immobile > 30 jours, état de délabrement), procédure d'identification du propriétaire (DIV), mise en demeure recommandée, délai d'enlèvement, frais de fourrière à charge du propriétaire. Référence : L2213-1 CDLD.`,
+  "mob-taxis": `Référence : décret wallon du 18 octobre 2007 relatif aux services de taxis. La taxe est communale mais doit respecter les conditions du décret. Inclure : nombre de véhicules autorisés, tarif par véhicule autorisé, renouvellement annuel.`,
+  "mob-force-motrice": `En déclin. Frappe l'utilisation de la voirie par des véhicules de force (camions, tracteurs). Vérifier l'opportunité. Exemptions : agriculteurs, services publics. Référence : art. 173 et suiv. LGCP.`,
+  // ── Immobilier ──────────────────────────────────────────────────────────
+  "immo-inoccupe": `Références : Décret wallon du 6 février 2014 (MW 26/02/2014). Inclure : définition de l'inoccupation (12 mois consécutifs), constatation par fonctionnaire, délai de contestation (30 jours), exemptions obligatoires (travaux autorisés, force majeure, succession < 2 ans, mise en vente récente), majoration progressive après 1re année.`,
+  "immo-non-bati": `Références : CoDT, art. D.IV.54. Définir les zones concernées (plan de secteur), exemptions pour terrain agricole/forestier, procédure de relevé cadastral.`,
+  "immo-seconde-residence": `Définition : bien non occupé comme résidence principale au Registre national. Exemptions : résidences de convalescence. Interaction avec taxe de séjour si applicable.`,
+  "immo-loues-meubles": `Définition : logement fourni avec mobilier suffisant pour y séjourner, loué à des fins autres que résidence principale. Inclure : obligation de déclaration par le propriétaire, exemptions pour logements sociaux, base de calcul (par chambre ou par logement).`,
+  "immo-surfaces-comm": `Référence : loi du 13 août 2011 sur les implantations commerciales (loi Laruelle). Inclure : définition des surfaces imposables (m² de surface de vente nette), exemptions pour petits commerces (< seuil), déclaration annuelle.`,
+  // ── Commerce ────────────────────────────────────────────────────────────
+  "com-antennes": `Jurisprudence abondante. Différencier emprise physique (pylône) vs puissance émettrice. Référence : Cass. 10/06/2011. Taxe sur emprise physique = admise ; taxe sur puissance = souvent annulée. Décret wallon 03/04/2014.`,
+  "com-dancings": `Inclure : définition de l'établissement (superficie, heure de fermeture), tarif forfaitaire annuel, exemptions pour associations sans but lucratif organisant des bals occasionnels (< X fois/an), procédure de déclaration.`,
+  "com-spectacles": `Inclure : définition du spectacle taxable (public payant, représentation publique), exemptions (manifestations scolaires, culturelles subventionnées, associations reconnues), base de calcul (par représentation ou sur recettes).`,
+  "com-etabl-danger": `Référence : Décret wallon du 11 mars 1999 (permis d'environnement classes 1-2). La taxe frappe l'exploitation de l'établissement, pas le permis lui-même. Inclure : liste des catégories d'établissements visés, tarif par classe et par tranche, déclaration annuelle.`,
+  // ── Publicité ───────────────────────────────────────────────────────────
+  "pub-panneaux": `Préciser : face visible depuis voie publique, superficie minimale imposable (> X m²), exemptions (panneaux électoraux, enseignes identifiant l'établissement propre), tarif par face et par m². Différencier des enseignes (voir pub-enseignes).`,
+  "pub-ecrits": `Référence : loi du 25 juin 1993 (activités ambulantes) pour les distributeurs. Inclure : définition des écrits visés (publicité non adressée, toutes boîtes), exemptions (presse d'information générale, publications des pouvoirs publics), tarif par adresse ou par tranche de distribution.`,
+  // ── Tourisme ────────────────────────────────────────────────────────────
+  "tour-sejour": `Inclure obligatoirement : registre journalier des nuitées, déclaration mensuelle/trimestrielle au Collège, solidarité de l'exploitant, exemptions (< 16 ans, séjours médicaux, résidents permanents). Référence : Décret wallon du 10 novembre 2016.`,
+  "tour-gites": `Référence : Décret wallon du 10 novembre 2016. Inclure : attestation de classement CGT, exemptions pour gîtes 1 épis.`,
+  "tour-campings": `Référence : Décret wallon du 10 novembre 2016. Distinguer résidence permanente (→ taxe secondes résidences) vs séjour touristique.`,
+  // ── Déchets ─────────────────────────────────────────────────────────────
+  "dech-collecte": `Dans la plupart des communes wallonnes, la collecte est assurée par une intercommunale (BEP, IDELUX, TIBI, IPALLE, InBW…) qui facture directement. Si commune en régie : inclure fréquence, types de déchets, calcul par ménage ou par volume.`,
+  "dech-sacs": `Inclure : tarif par type de sac (résidu, PMC, organique, verre), volume des sacs, modalités de distribution (points de vente agréés), exemptions pour ménages à faibles revenus.`,
+  "dech-versages": `Inclure : définition du versage sauvage, procédure de constatation, identification du responsable, mise en demeure recommandée, frais d'enlèvement + barème administratif par volume.`,
+  // ── Infrastructure ──────────────────────────────────────────────────────
+  "infra-egouts": `Inclure : définition du raccordement (avec ou sans traversée de voirie), tarif selon longueur et complexité des travaux, délai d'exécution, responsabilité des dégradations de voirie, obligation de raccordement (CWEA art. 375 et suiv.).`,
+  "infra-eau": `Préciser : distinction abonnement compteur vs consommation, tarif par m³, tranches de consommation, ajustement annuel, procédure en cas de non-paiement. Souvent géré par intercommunale mais certaines communes ont encore une régie eau.`,
+  // ── Énergie ─────────────────────────────────────────────────────────────
+  "ener-eoliennes": `Référence : décret wallon du 12 avril 2001 (électricité). La taxe frappe l'exploitation industrielle. Inclure : définition de la puissance imposable (kW installés ou MW), tarif par unité de puissance, déclaration annuelle, interaction avec la taxe sur les mâts si distincte.`,
+  "ener-mines": `Référence : loi du 26 mars 1844 sur les mines (toujours applicable). Inclure : définition des substances imposables, tarif par tonne extraite ou par exploitation, déclaration trimestrielle, exemptions pour petites extractions.`,
+  // ── Funéraire ───────────────────────────────────────────────────────────
+  "fun-inhumation": `La taxe (ou redevance) frappe l'acte d'inhumation, de mise en columbarium ou de dispersion des cendres. Différencier selon le mode (pleine terre, caveau, columbarium, dispersion). Inclure exemptions pour indigents (L1122-30 CDLD).`,
+  "fun-concessions": `Inclure : tableau des durées (10/20/30 ans/perpétuelle), procédure de renouvellement avec notification recommandée avant expiration, clause de déchéance pour abandon (> 2 ans mauvais entretien), droit de reprise après déchéance.`,
+  "fun-renouvellement": `Préciser la procédure de notification préalable à l'expiration (délai recommandé : 6 mois avant), tarif de renouvellement (souvent inférieur à la concession initiale), conséquences du non-renouvellement.`,
+  "fun-exhumation": `Inclure : distinction exhumation administrative vs exhumation de confort (à la demande de la famille, réalisée par un entrepreneur de pompes funèbres mandaté par la commune), tarif selon le type d'opération.`,
+  "fun-caveau-attente": `Inclure : durée maximale d'occupation (généralement 6 à 12 mois), tarif journalier ou forfaitaire, conditions de prorogation, procédure en cas de non-libération.`,
+  // ── Enseignement ────────────────────────────────────────────────────────
+  "ens-extrascolaire": `Référence : décret wallon du 3 juillet 2003 (accueil temps libre, ATL). La redevance couvre les prestations de surveillance et d'animation extrascolaires. Inclure : tarif par heure/demi-journée/journée, tranches selon revenus (modulation possible), modalités de facturation mensuelle.`,
+  "ens-repas": `Inclure : tarif par repas selon le niveau d'enseignement, modalités de commande et d'annulation, tarification sociale (quotient familial), paiement mensuel ou en ligne.`,
+  // ── Équipements ─────────────────────────────────────────────────────────
+  "equip-salles": `Inclure : tableau tarifaire par salle et tranche horaire, caution remboursable, responsabilité pour dégradations, nettoyage, priorité aux associations locales (tarif réduit), contrat de location obligatoire.`,
+  "equip-sport": `Inclure : tableau tarifaire par infrastructure et par heure, priorité aux clubs affiliés, conditions de réservation, règlement intérieur annexé, assurance des utilisateurs.`,
+  // ── Animaux ─────────────────────────────────────────────────────────────
+  "anim-chiens": `Taxe supprimée dans de nombreuses communes wallonnes — vérifier l'opportunité. Si maintenue : exemptions (chiens d'assistance, éleveurs agréés), déclaration annuelle en janvier, tarif par animal.`,
 };
+
 
 const WORKER_URL = import.meta.env.VITE_WORKER_URL || '';
 const ODWB = `${WORKER_URL}/odwb/api/explore/v2.1/catalog/datasets`;
