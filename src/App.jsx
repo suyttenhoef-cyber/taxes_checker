@@ -12,18 +12,95 @@ const C = {
 };
 
 const CATEGORIES = [
-  { slug:"actes-administratifs",  label:"Actes administratifs et état civil" },
-  { slug:"domaine-public",        label:"Domaine public et voirie" },
-  { slug:"dechets-environnement", label:"Déchets et environnement" },
-  { slug:"hebergement-tourisme",  label:"Hébergement touristique et séjour" },
-  { slug:"commerce-economie",     label:"Commerce et activités économiques" },
-  { slug:"inhumation",            label:"Inhumation & Cimetière" },
-  { slug:"animaux",               label:"Animaux" },
-  { slug:"immondices",            label:"Immondices" },
-  { slug:"location-salle",        label:"Location salle et matériel communal" },
-  { slug:"mobilite",              label:"Mobilité" },
-  { slug:"impots",                label:"Impôts" },
+  { slug:"actes-administratifs", label:"Actes administratifs et état civil", sous:[
+    { slug:"actes-documents",    label:"Délivrance de documents (extraits, copies actes d'état civil)" },
+    { slug:"actes-urbanisme",    label:"Renseignements urbanistiques et copies de plans" },
+    { slug:"actes-legalisation", label:"Légalisations de signatures et apostilles" },
+  ]},
+  { slug:"domaine-public", label:"Domaine public et voirie", sous:[
+    { slug:"domaine-terrasses",  label:"Terrasses horeca sur voirie" },
+    { slug:"domaine-chantiers",  label:"Chantiers et installations temporaires" },
+    { slug:"domaine-enseignes",  label:"Enseignes saillantes et présentoirs" },
+    { slug:"domaine-etalages",   label:"Étalages et marchands ambulants" },
+    { slug:"domaine-depots",     label:"Dépôts et encombrants sur voirie" },
+  ]},
+  { slug:"immobilier", label:"Immobilier et logement", sous:[
+    { slug:"immo-inoccupe",         label:"Logements inoccupés / abandonnés (Décr. 06/02/2014)" },
+    { slug:"immo-non-bati",         label:"Terrains non bâtis en zone urbanisée" },
+    { slug:"immo-seconde-residence",label:"Secondes résidences et résidences de tourisme" },
+    { slug:"immo-parking",          label:"Emplacements de parking privés" },
+  ]},
+  { slug:"commerce-economie", label:"Commerce et activités économiques", sous:[
+    { slug:"com-horeca-nuit",    label:"Établissements ouverts la nuit (discothèques, bars tardifs)" },
+    { slug:"com-distributeurs",  label:"Distributeurs automatiques (boissons, tabac, services)" },
+    { slug:"com-publicite",      label:"Panneaux publicitaires et affiches commerciales" },
+    { slug:"com-antennes",       label:"Antennes, pylônes et infrastructures télécom / 5G" },
+    { slug:"com-guichets",       label:"Guichets automatiques bancaires (ATM)" },
+    { slug:"com-night-shops",    label:"Night-shops et commerces à horaires décalés" },
+  ]},
+  { slug:"hebergement-tourisme", label:"Tourisme et hébergement", sous:[
+    { slug:"tour-sejour",   label:"Taxe de séjour (par nuitée et par personne)" },
+    { slug:"tour-gites",    label:"Gîtes, meublés touristiques, B&B" },
+    { slug:"tour-campings", label:"Campings, parcs résidentiels et caravaniers" },
+  ]},
+  { slug:"dechets-environnement", label:"Déchets et environnement", sous:[
+    { slug:"dech-collecte",       label:"Collecte des ordures ménagères" },
+    { slug:"dech-dechetterie",    label:"Accès à la déchetterie communale" },
+    { slug:"dech-deversements",   label:"Déversements dans les égouts et cours d'eau" },
+    { slug:"dech-encombrants",    label:"Enlèvement d'encombrants à domicile" },
+  ]},
+  { slug:"inhumation", label:"Funéraire et cimetières", sous:[
+    { slug:"fun-inhumation",  label:"Inhumations, exhumations et transferts de corps" },
+    { slug:"fun-concessions", label:"Concessions de sépultures (tombes, caveaux, columbarium)" },
+    { slug:"fun-entretien",   label:"Entretien de tombes et fleurissement" },
+    { slug:"fun-columbarium", label:"Columbariums et ossuaires" },
+  ]},
+  { slug:"location-salle", label:"Équipements et services communaux", sous:[
+    { slug:"equip-salles",       label:"Location de salles et locaux communaux" },
+    { slug:"equip-materiel",     label:"Location de matériel communal (podiums, barrières, sono)" },
+    { slug:"equip-sport",        label:"Infrastructures sportives (terrains, gymnases, courts)" },
+    { slug:"equip-piscine",      label:"Piscine communale" },
+    { slug:"equip-bibliotheque", label:"Bibliothèque communale (inscriptions, prêts, amendes)" },
+  ]},
+  { slug:"mobilite", label:"Mobilité et stationnement", sous:[
+    { slug:"mob-parking",         label:"Parking communal payant / carte de riverain" },
+    { slug:"mob-force-motrice",   label:"Force motrice (utilisation de la voirie publique)" },
+    { slug:"mob-veh-abandonnes",  label:"Véhicules abandonnés sur voirie" },
+  ]},
+  { slug:"animaux", label:"Animaux", sous:[
+    { slug:"anim-chiens",   label:"Chiens (taxe ou redevance d'identification)" },
+    { slug:"anim-fourriere",label:"Fourrière animale" },
+    { slug:"anim-nuisibles",label:"Dératisation et nuisibles" },
+  ]},
+  { slug:"impots", label:"Centimes additionnels", sous:[
+    { slug:"add-ipp", label:"Additionnels à l'impôt des personnes physiques (IPP)" },
+    { slug:"add-pi",  label:"Additionnels au précompte immobilier" },
+  ]},
 ];
+
+// Notes juridiques spécifiques par sous-catégorie — injectées dans le prompt
+const NOTES_SOUS_CAT = {
+  "immo-inoccupe": `Références spécifiques : Décret wallon du 6 février 2014 relatif à la taxation des logements et immeubles inoccupés (MW 26/02/2014). Inclure : définition légale de l'inoccupation (12 mois consécutifs sans occupation normale), procédure de constatation par le fonctionnaire communal, délai de contestation de la constatation (30 jours), cas d'exemption obligatoires (travaux autorisés par permis, cas de force majeure, succession non réglée < 2 ans, mise en vente récente), majoration progressive possible après la 1re année.`,
+  "immo-non-bati": `Références : CWATUPE / CoDT, art. 127 et suiv. Définir précisément les zones concernées (plan de secteur), les exemptions pour terrain agricole ou forestier, la procédure de relevé cadastral, la majoration si la situation perdure.`,
+  "immo-seconde-residence": `Définition : bien immobilier non occupé comme résidence principale au sens du Registre national. Inclure exemptions pour résidences de convalescence, définition de la période d'imposition, interaction avec la taxe de séjour si applicable.`,
+  "com-antennes": `Jurisprudence abondante — être précis. Différencier taxe sur l'emprise physique (pylône visible sur territoire) vs taxe sur les émetteurs. Référence : Cass. 10/06/2011. La taxe sur l'emprise physique du pylône est en principe admise ; la taxe sur la puissance émettrice est souvent annulée. Viser uniquement l'installation physique sur le territoire communal. Décret wallon du 3 avril 2014 sur les infrastructures télécom.`,
+  "com-publicite": `Préciser la définition du support publicitaire (face visible depuis la voie publique, superficie minimale), les exemptions (panneaux d'affichage électoraux, enseignes de commerce identifiant l'établissement). Si l'enseigne est fixée au bâtiment : voir domaine-enseignes. Si panneau détaché : taxe ou redevance selon le cas.`,
+  "tour-sejour": `Inclure obligatoirement : obligation de tenue d'un registre journalier des nuitées par l'exploitant, déclaration mensuelle ou trimestrielle au Collège, solidarité de l'exploitant en cas de non-paiement par le client, exemptions (mineurs < 16 ans, séjours médicaux documentés, résidents permanents). Base légale : Décret wallon du 10 novembre 2016 relatif au tourisme.`,
+  "tour-gites": `Référence au Décret wallon du 10 novembre 2016 (hébergements touristiques). Inclure la définition de l'hébergement touristique (capacité d'accueil, durée < 3 mois), l'attestation de classement ou d'enregistrement CGT, les exemptions pour gîtes classés 1 épis.`,
+  "tour-campings": `Référence au Décret wallon du 10 novembre 2016. Distinguer emplacements avec résidence permanente vs séjours touristiques. Inclure la définition des résidents à l'année (taxe sur secondes résidences plutôt que séjour).`,
+  "fun-concessions": `Inclure : tableau des durées de concession (10, 20, 30 ans ou perpétuelle selon le règlement communal), procédure de renouvellement express avant expiration avec notification recommandée, clause de déchéance en cas d'abandon manifeste (mauvais entretien constaté > 2 ans), droit de reprise après déchéance. Différencier redevance initiale vs renouvellement.`,
+  "fun-columbarium": `Préciser : emplacement dans le columbarium (cases numérotées), durée de concession, conditions d'accès (restrictions aux cendres légalement obtenues), règles de mention sur la plaque, coûts d'installation de la plaque.`,
+  "domaine-terrasses": `Inclure obligatoirement : plan ou croquis de l'occupation joint à la demande d'autorisation, dimensions exactes (m²), mobilier conforme au règlement communal de police, attestation d'assurance RC couvrant l'occupation du domaine public, période standard d'occupation (15 mars – 15 novembre sauf dérogation), renouvellement annuel tacite ou exprès. Visa L2213-1 CDLD.`,
+  "domaine-chantiers": `Inclure : emprise maximale autorisée, balisage et signalisation obligatoires (normes RGPPT), durée maximale sans prolongation, responsabilité civile de l'entrepreneur, remise en état du domaine public après travaux.`,
+  "domaine-enseignes": `Différencier enseigne parallèle au mur (pas d'occupation supplémentaire) vs enseigne saillante (débord sur espace public). Seule la saillante génère une redevance ou taxe sur la base de l'occupation du domaine aérien.`,
+  "add-ipp": `Le règlement établit le taux en centimes additionnels à l'IPP ou en pourcentage de l'impôt État de base. Référence : art. 464 à 470bis CIR92. Préciser l'exercice d'imposition (revenus de l'année X = exercice X+1). Le taux est voté avant le 31 décembre de l'année précédant l'exercice.`,
+  "add-pi": `Le taux est exprimé en centimes additionnels au précompte immobilier. Référence : art. 251 à 259bis CIR92 + Code wallon de la taxation (décret 06/05/1999). Inclure l'assiette (revenu cadastral × taux PI de base × centimes additionnels).`,
+  "equip-salles": `Inclure : tableau tarifaire par type de salle et tranche horaire (soirée, week-end, journée), caution/dépôt de garantie remboursable, responsabilité du locataire pour dégradations, obligation de nettoyage ou facturation du nettoyage, priorité aux associations locales (tarif préférentiel), réservation par contrat de location.`,
+  "equip-sport": `Inclure : tableau tarifaire par type d'infrastructure et par heure, priorité aux clubs affiliés à la commune, conditions de réservation, règlement intérieur annexé, assurance des utilisateurs.`,
+  "dech-collecte": `Attention : dans la plupart des communes wallonnes, la collecte est assurée par une intercommunale (BEP, BEPN, IDELUX, TIBI, IPALLE, InBW…) qui facture directement. Si la commune gère en régie, inclure : fréquence de collecte, types de déchets couverts, modalités de calcul (par ménage, par volume).`,
+  "mob-force-motrice": `Note : cette taxe est en déclin. Elle frappe l'utilisation de la voirie communale par des véhicules de force (camions, tracteurs). Vérifier l'opportunité et les exceptions (agriculteurs, services publics). Référence : art. 173 et suivants LGCP.`,
+  "anim-chiens": `Note : la taxe communale sur les chiens a été supprimée dans de nombreuses communes wallonnes. Vérifier l'opportunité. Si maintenue : inclure exemptions (chiens d'assistance, éleveurs agréés, associations reconnues), déclaration annuelle en janvier, base de calcul par animal.`,
+};
 
 const WORKER_URL = import.meta.env.VITE_WORKER_URL || '';
 const ODWB = `${WORKER_URL}/odwb/api/explore/v2.1/catalog/datasets`;
@@ -95,13 +172,16 @@ const SOURCE = (() => {
   catch { return REFS; }
 })();
 
-function trouverRefs(objet, type, categorie, source) {
+function trouverRefs(objet, type, categorie, source, sousCat) {
   const src = source || SOURCE;
+  // Backward compat : immondices est un ancien slug fusionn\u00e9 dans dechets-environnement
+  const SLUG_COMPAT = { "immondices":"dechets-environnement" };
+  const catNorm = c => SLUG_COMPAT[c] || c;
   const mots = (objet || "")
     .toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "")
     .split(/[\s,;.]+/).filter(m => m.length > 3);
   return src
-    .filter(r => r.type===type && (!categorie||r.categorie===categorie) && r.qualite!=="insuffisante" && r.qualite!=="brouillon")
+    .filter(r => r.type===type && (!categorie||catNorm(r.categorie)===catNorm(categorie)) && r.qualite!=="insuffisante" && r.qualite!=="brouillon")
     .map(r => {
       const cles = [
         ...(r.mots_cles||[]),
@@ -111,7 +191,8 @@ function trouverRefs(objet, type, categorie, source) {
       ].join(" ").toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g,"");
       const score = mots.filter(m=>cles.includes(m)).length;
       const bonus = (r.points_forts_valides?2:0)
-        + (r.qualite==="reference"?3:r.qualite==="valide"?1:0);
+        + (r.qualite==="reference"?3:r.qualite==="valide"?1:0)
+        + (sousCat && r.sousCat===sousCat ? 2 : 0);
       return { ...r, _score: score + bonus };
     })
     .filter(r => r._score>0 || !categorie)
@@ -499,7 +580,10 @@ function buildMessages(p, refs, mandataires, presences) {
       }`
     : "";
 
-  const catLabel = CATEGORIES.find(c=>c.slug===p.categorie)?.label||"";
+  const catLabel    = CATEGORIES.find(c=>c.slug===p.categorie)?.label||"";
+  const sousCatObj  = CATEGORIES.flatMap(c=>c.sous||[]).find(s=>s.slug===p.sousCat);
+  const sousCatLabel= sousCatObj?.label||"";
+  const notesSousCat= NOTES_SOUS_CAT[p.sousCat]||"";
   const pf = refs.map(r =>
     `${r.titre} (${r.commune}, ${r.annee})\nPoints forts :\n${r.points_forts.map(x=>`- ${x}`).join("\n")}\nExtrait :\n${r.extrait}`
   ).join("\n\n---\n\n");
@@ -513,7 +597,7 @@ Directeur(trice) général(e) : ${dirGenNom}
 Population : ${p.population?p.population.toLocaleString("fr-BE")+" hab.":"non précisée"}
 
 PARAMÈTRES DU RÈGLEMENT :
-- Catégorie : ${catLabel||"Non précisée"}
+- Catégorie : ${catLabel||"Non précisée"}${sousCatLabel?" — "+sousCatLabel:""}
 - Objet : ${p.objet}
 - Type : ${p.typeReglement}${p.typeReglement==="redevance"?" ("+( p.sousTypeRedevance==="autorisation"?"autorisation d'occupation du domaine public":"service rendu / usage")+")":""}
 - Exercices : ${p.periodeDebut} à ${p.periodeFin}
@@ -521,6 +605,8 @@ PARAMÈTRES DU RÈGLEMENT :
 - Tarif : ${p.tarif}
 - Exonérations : ${p.exonerations||"Aucune"}
 - Compléments : ${p.infoCompl||"Aucun"}
+${notesSousCat?`\nEXIGENCES JURIDIQUES SPÉCIFIQUES À CETTE SOUS-CATÉGORIE :\n${notesSousCat}`:""}
+
 
 VISAS OBLIGATOIRES (dans cet ordre) :
 1. Vu la Constitution, notamment les articles 41, 162 et 170 §4
@@ -864,11 +950,22 @@ function FormulaireEntree({ initial, onSave, onCancel }) {
             </div>
             <div style={{gridColumn:"1/-1",marginBottom:12}}>
               <label style={lS}>Catégorie *</label>
-              <select style={iS} value={e.categorie} onChange={x=>upd("categorie",x.target.value)}>
+              <select style={iS} value={e.categorie} onChange={x=>{upd("categorie",x.target.value); upd("sousCat","");}}>
                 <option value="">— Choisir —</option>
                 {CATEGORIES.map(c=><option key={c.slug} value={c.slug}>{c.label}</option>)}
               </select>
             </div>
+            {e.categorie && (
+              <div style={{gridColumn:"1/-1",marginBottom:12}}>
+                <label style={lS}>Sous-catégorie</label>
+                <select style={iS} value={e.sousCat||""} onChange={x=>upd("sousCat",x.target.value)}>
+                  <option value="">— Non précisée —</option>
+                  {(CATEGORIES.find(c=>c.slug===e.categorie)?.sous||[]).map(s=>(
+                    <option key={s.slug} value={s.slug}>{s.label}</option>
+                  ))}
+                </select>
+              </div>
+            )}
             <div style={{gridColumn:"1/-1"}}>
               {iF("Objet du règlement *", e.objet, v=>upd("objet",v))}
             </div>
@@ -1093,7 +1190,7 @@ export default function App() {
   const [params, setParams] = useState({
     commune:"", ins:"", cp:"", province:"", arrondissement:"", population:null,
     nomCourt:"", adresse:"", emailGeneral:"", telephone:"",
-    typeReglement:"taxe", sousTypeRedevance:"autorisation", categorie:"", objet:"", dateSeance:"",
+    typeReglement:"taxe", sousTypeRedevance:"autorisation", categorie:"", sousCat:"", objet:"", dateSeance:"",
     periodeDebut: String(new Date().getFullYear()+1),
     periodeFin:   String(new Date().getFullYear()+6),
     redevable:"", tarif:"", exonerations:"", infoCompl:"",
@@ -1130,7 +1227,7 @@ export default function App() {
   const generer = useCallback(async () => {
     if (!params.objet||!params.redevable||!params.tarif) { setErreur("Champs requis : objet, redevable et tarif."); return; }
     setErreur(""); setLoading(true); setTexteGenere(""); streamRef.current=""; setEtape("generation");
-    const refs = trouverRefs(params.objet, params.typeReglement, params.categorie, biblio);
+    const refs = trouverRefs(params.objet, params.typeReglement, params.categorie, biblio, params.sousCat);
     try {
       const res = await fetch(`${WORKER_URL}/openai/v1/chat/completions`, {
         method:"POST", headers:{"Content-Type":"application/json"},
@@ -1172,7 +1269,9 @@ export default function App() {
 
   const coulGrav = {erreur:C.rouge, avertissement:C.jaune, info:C.bleu};
   const labelGrav = {erreur:"❌ Erreurs bloquantes", avertissement:"⚠️ Avertissements", info:"ℹ️ Bonnes pratiques"};
-  const nbRefs = biblio.filter(r=>r.type===params.typeReglement&&(!params.categorie||r.categorie===params.categorie)&&r.qualite!=="insuffisante"&&r.qualite!=="brouillon").length;
+  const SLUG_COMPAT = {"immondices":"dechets-environnement"};
+  const catNorm = c => SLUG_COMPAT[c]||c;
+  const nbRefs = biblio.filter(r=>r.type===params.typeReglement&&(!params.categorie||catNorm(r.categorie)===catNorm(params.categorie))&&r.qualite!=="insuffisante"&&r.qualite!=="brouillon").length;
 
   return (
     <div style={{fontFamily:"'Segoe UI',Arial,sans-serif",background:C.grisClair,minHeight:"100vh"}}>
@@ -1221,12 +1320,29 @@ export default function App() {
 
                 <div style={{gridColumn:"1/-1"}}>
                   <label style={lS}>Catégorie <span style={{color:C.rouge}}>*</span></label>
-                  <select style={iS} value={params.categorie} onChange={e=>upd("categorie",e.target.value)}>
+                  <select style={iS} value={params.categorie}
+                    onChange={e=>{upd("categorie",e.target.value); upd("sousCat","");}}>
                     <option value="">— Sélectionner une catégorie —</option>
                     {CATEGORIES.map(c=><option key={c.slug} value={c.slug}>{c.label}</option>)}
                   </select>
-                  {params.categorie&&<div style={{marginTop:5,fontSize:11,color:C.gris}}>📚 {nbRefs} règlement(s) de référence disponible(s)</div>}
                 </div>
+                {params.categorie && (
+                  <div style={{gridColumn:"1/-1"}}>
+                    <label style={lS}>Sous-catégorie</label>
+                    <select style={iS} value={params.sousCat} onChange={e=>upd("sousCat",e.target.value)}>
+                      <option value="">— Préciser la sous-catégorie (recommandé) —</option>
+                      {(CATEGORIES.find(c=>c.slug===params.categorie)?.sous||[]).map(s=>(
+                        <option key={s.slug} value={s.slug}>{s.label}</option>
+                      ))}
+                    </select>
+                    <div style={{marginTop:5,fontSize:11,color:C.gris}}>
+                      📚 {nbRefs} règlement(s) de référence disponible(s)
+                      {params.sousCat && NOTES_SOUS_CAT[params.sousCat] && (
+                        <span style={{marginLeft:8,color:C.orange,fontWeight:700}}>⚡ Exigences juridiques spécifiques disponibles</span>
+                      )}
+                    </div>
+                  </div>
+                )}
 
                 <div>
                   <label style={lS}>Type d'acte</label>
