@@ -13,17 +13,31 @@ export default defineConfig(({ mode }) => {
           changeOrigin: true,
           rewrite: path => path.replace(/^\/odwb/, ''),
         },
-        '/anthropic': {
-          target: 'https://api.anthropic.com',
+        '/github': {
+          target: 'https://api.github.com',
           changeOrigin: true,
           secure: true,
-          rewrite: path => path.replace(/^\/anthropic/, ''),
+          rewrite: path => path.replace(/^\/github/, ''),
           configure: (proxy) => {
             proxy.on('proxyReq', (proxyReq) => {
               proxyReq.removeHeader('Origin')
               proxyReq.removeHeader('Referer')
-              proxyReq.setHeader('x-api-key', env.ANTHROPIC_KEY)
-              proxyReq.setHeader('anthropic-version', '2023-06-01')
+              proxyReq.setHeader('Authorization', `Bearer ${env.GITHUB_TOKEN}`)
+              proxyReq.setHeader('User-Agent', 'taxes-checker-app')
+              proxyReq.setHeader('Accept', 'application/vnd.github.v3+json')
+            })
+          },
+        },
+        '/openai': {
+          target: 'https://api.openai.com',
+          changeOrigin: true,
+          secure: true,
+          rewrite: path => path.replace(/^\/openai/, ''),
+          configure: (proxy) => {
+            proxy.on('proxyReq', (proxyReq) => {
+              proxyReq.removeHeader('Origin')
+              proxyReq.removeHeader('Referer')
+              proxyReq.setHeader('Authorization', `Bearer ${env.OPENAI_KEY}`)
             })
           },
         },

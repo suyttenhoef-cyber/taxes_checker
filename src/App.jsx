@@ -95,20 +95,126 @@ const SOURCE = (() => {
   catch { return REFS; }
 })();
 
-function trouverRefs(objet, type, categorie) {
+function trouverRefs(objet, type, categorie, source) {
+  const src = source || SOURCE;
   const mots = (objet || "")
     .toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "")
     .split(/[\s,;.]+/).filter(m => m.length > 3);
-  return SOURCE
-    .filter(r => r.type===type && (!categorie||r.categorie===categorie) && r.qualite!=="insuffisante")
+  return src
+    .filter(r => r.type===type && (!categorie||r.categorie===categorie) && r.qualite!=="insuffisante" && r.qualite!=="brouillon")
     .map(r => {
-      const cles = (r.mots_cles||[]).join(" ").toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g,"");
+      const cles = [
+        ...(r.mots_cles||[]),
+        ...(r.visas||[]),
+        r.objet||"", r.tarifs||"",
+        ...(r.exonerations||[]),
+      ].join(" ").toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g,"");
       const score = mots.filter(m=>cles.includes(m)).length;
-      return { ...r, _score: score + (r.points_forts_valides?2:0) };
+      const bonus = (r.points_forts_valides?2:0)
+        + (r.qualite==="reference"?3:r.qualite==="valide"?1:0);
+      return { ...r, _score: score + bonus };
     })
     .filter(r => r._score>0 || !categorie)
     .sort((a,b)=>b._score-a._score).slice(0,4);
 }
+// ─── BIBLIOTHÈQUE ─────────────────────────────────────────────────────────────
+const BIBLIO_KEY = "vb_biblio_locale";
+
+function chargerLocale() {
+  try { return JSON.parse(localStorage.getItem(BIBLIO_KEY) || "[]"); }
+  catch { return []; }
+}
+function sauvegarderLocale(entries) {
+  localStorage.setItem(BIBLIO_KEY, JSON.stringify(entries));
+}
+function mergerBiblio() {
+  const locale = chargerLocale();
+  const ids = new Set(locale.map(e => e.id));
+  return [...SOURCE.filter(e => !ids.has(e.id)), ...locale];
+}
+function exporterBiblio(entries) {
+  const clean = entries.map(({ _local, _score, ...e }) => e);
+  const a = Object.assign(document.createElement("a"), {
+    href: URL.createObjectURL(new Blob([JSON.stringify(clean, null, 2)], { type:"application/json" })),
+    download: "index_valide.json",
+  });
+  a.click(); URL.revokeObjectURL(a.href);
+}
+
+const GITHUB_REPO = "suyttenhoef-cyber/taxes_checker";
+const GITHUB_PATH = "src/index_valide.json";
+const GITHUB_BRANCH = "main";
+
+async function publierBiblio(entries) {
+  const base = `${WORKER_URL}/github/repos/${GITHUB_REPO}/contents/${GITHUB_PATH}`;
+  const getRes = await fetch(`${base}?ref=${GITHUB_BRANCH}`);
+  if (!getRes.ok) throw new Error(`Lecture fichier GitHub impossible (${getRes.status})`);
+  const { sha } = await getRes.json();
+
+  const clean = entries.map(({ _local, _score, ...e }) => e);
+  const json  = JSON.stringify(clean, null, 2);
+  const content = btoa(unescape(encodeURIComponent(json)));
+  const today = new Date().toISOString().slice(0, 10);
+
+  const putRes = await fetch(base, {
+    method: "PUT",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({
+      message: `chore: mise à jour bibliothèque règlements (${today})`,
+      content,
+      sha,
+      branch: GITHUB_BRANCH,
+    }),
+  });
+  if (!putRes.ok) { const e = await putRes.text(); throw new Error(`Commit GitHub impossible (${putRes.status}) : ${e}`); }
+  return await putRes.json();
+}
+
+const SYSTEM_EXTRACTION = `Tu es un expert en droit communal wallon.
+Extrait les informations structurées du règlement communal fourni.
+Retourne UNIQUEMENT un objet JSON valide avec exactement ces champs :
+{
+  "commune": "nom exact de la commune",
+  "type": "taxe" ou "redevance",
+  "categorie": "slug exact parmi : actes-administratifs | domaine-public | dechets-environnement | hebergement-tourisme | commerce-economie | inhumation | animaux | immondices | location-salle | mobilite | impots",
+  "annee": YYYY (entier),
+  "periode": "YYYY" ou "YYYY-YYYY",
+  "objet": "description courte et précise de l'objet du règlement",
+  "mots_cles": ["mot1", "mot2", "..."],
+  "visas": ["Vu la Constitution art. 170 §4", "Vu le CDLD L1122-30", "..."],
+  "tarifs": "description complète des montants et grilles tarifaires",
+  "exonerations": ["cas d'exonération 1", "..."],
+  "points_forts": ["formulation juridique remarquable 1", "..."],
+  "extrait": "extrait représentatif du texte (500 mots max, conserver la forme officielle)",
+  "source": { "numero_deliberation": "", "date_seance": "YYYY-MM-DD ou vide" },
+  "qualite": "brouillon"
+}
+Si une information est absente, utilise "" ou [] selon le type. Ne commente pas.`;
+
+async function extraireAvecIA(texte) {
+  const res = await fetch(`${WORKER_URL}/openai/v1/chat/completions`, {
+    method:"POST", headers:{"Content-Type":"application/json"},
+    body: JSON.stringify({
+      model:"gpt-4o", max_tokens:2000,
+      response_format:{ type:"json_object" },
+      messages:[
+        { role:"system", content:SYSTEM_EXTRACTION },
+        { role:"user", content:texte.slice(0, 10000) },
+      ],
+    }),
+  });
+  if (!res.ok) { const e = await res.text(); throw new Error(`API ${res.status} : ${e}`); }
+  const data = await res.json();
+  return JSON.parse(data.choices[0].message.content);
+}
+
+const VIDE_ENTREE = () => ({
+  id:`local-${Date.now()}`, commune:"", type:"taxe", categorie:"", annee:new Date().getFullYear(),
+  periode:"", objet:"", mots_cles:[], visas:[], tarifs:"", exonerations:[],
+  points_forts:[], extrait:"", source:{numero_deliberation:"",date_seance:""},
+  qualite:"brouillon", points_forts_valides:false, _local:true,
+});
+
 const REGLES = [
   {
     id:"r-const-170", gravite:"erreur",
@@ -314,26 +420,76 @@ function verifier(t) {
   });
 }
 
-function buildPrompt(p, refs, mandataires) {
+const SYSTEM_REGLEMENT = `Tu es un expert en droit communal wallon travaillant pour Vanden Broele.
+Tu rédiges des règlements communaux wallons complets et conformes à la législation wallonne.
+
+RÈGLES DE FORME ABSOLUES :
+- Aucun formatage Markdown (pas de **, ##, *, _, ---)
+- Texte brut uniquement, français administratif belge sobre et précis
+- Crochets [XXXXX] pour tout élément à compléter par la commune
+- Aucun commentaire ni explication après le texte du règlement
+
+STRUCTURE OBLIGATOIRE — respecte exactement ce squelette, section par section :
+
+EXTRAIT DU REGISTRE AUX DÉLIBÉRATIONS DU CONSEIL COMMUNAL
+Séance publique du [DATE DE LA SÉANCE]
+
+Présents : [LISTE DES CONSEILLERS PRÉSENTS]
+Absent(s) excusé(s) : [LE CAS ÉCHÉANT]
+
+OBJET : [INTITULÉ COMPLET DU RÈGLEMENT]
+
+
+VU [première référence légale]
+VU [référence suivante]
+[continuer tous les visas requis, un par ligne, en commençant chaque ligne par VU]
+
+CONSIDÉRANT [premier élément de motivation]
+CONSIDÉRANT [élément suivant]
+[continuer tous les considérants requis, un par ligne, en commençant chaque ligne par CONSIDÉRANT]
+
+Sur proposition du Collège communal,
+Après en avoir délibéré,
+
+DÉCIDE, à [unanimité / majorité de X voix contre X],
+
+Article 1er — [INTITULÉ]
+[Texte complet de l'article]
+
+Article 2 — [INTITULÉ]
+[Texte complet de l'article]
+
+[... continuer pour tous les articles requis ...]
+
+
+Par le Conseil communal,
+
+Le(La) Directeur(trice) général(e),          Le(La) Bourgmestre,
+
+[NOM ET SIGNATURE DG]                         [NOM ET SIGNATURE BOURGMESTRE]
+
+
+Pour extrait conforme délivré le [DATE]`;
+
+function buildMessages(p, refs, mandataires) {
   const bourg = mandataires.find(m => /bourgmestre/i.test(m.detail_fonction));
   const bourgNom = bourg ? `${bourg.detail_civilite||""} ${bourg.detail_prenom||""} ${bourg.detail_nom||""}`.trim() : "[NOM BOURGMESTRE]";
   const dirGen = mandataires.find(m => /directeur|directrice\s+g[eé]n[eé]ral/i.test(m.detail_fonction));
   const dirGenNom = dirGen ? `${dirGen.detail_civilite||""} ${dirGen.detail_prenom||""} ${dirGen.detail_nom||""}`.trim() : "[NOM DIRECTEUR GÉNÉRAL]";
   const catLabel = CATEGORIES.find(c=>c.slug===p.categorie)?.label||"";
   const pf = refs.map(r =>
-    `### ${r.titre} (${r.commune}, ${r.annee})\nPoints forts :\n${r.points_forts.map(x=>`- ${x}`).join("\n")}\nExtrait :\n${r.extrait}`
+    `${r.titre} (${r.commune}, ${r.annee})\nPoints forts :\n${r.points_forts.map(x=>`- ${x}`).join("\n")}\nExtrait :\n${r.extrait}`
   ).join("\n\n---\n\n");
 
-  return `Tu es un expert en droit communal wallon. Tu travailles pour Vanden Broele.
-
-MISSION : Rédige un ${p.typeReglement==="taxe"?"règlement-taxe":"règlement-redevance"} communal wallon COMPLET et CONFORME.
+  const userContent =
+`MISSION : Rédige un ${p.typeReglement==="taxe"?"règlement-taxe":"règlement-redevance"} communal wallon.
 
 COMMUNE : ${p.commune||"[COMMUNE]"}${p.ins?` (INS ${p.ins})`:""}${p.province?`, Province de ${p.province}`:""}
 Bourgmestre : ${bourgNom}
 Directeur(trice) général(e) : ${dirGenNom}
 Population : ${p.population?p.population.toLocaleString("fr-BE")+" hab.":"non précisée"}
 
-PARAMÈTRES :
+PARAMÈTRES DU RÈGLEMENT :
 - Catégorie : ${catLabel||"Non précisée"}
 - Objet : ${p.objet}
 - Type : ${p.typeReglement}
@@ -343,50 +499,40 @@ PARAMÈTRES :
 - Exonérations : ${p.exonerations||"Aucune"}
 - Compléments : ${p.infoCompl||"Aucun"}
 
-RÈGLEMENTS DE RÉFÉRENCE VANDEN BROELE :
-${pf.length>0?pf:"(aucune référence — appliquer strictement les exigences légales)"}
-
-EXIGENCES JURIDIQUES IMPÉRATIVES :
-
-VISAS (dans cet ordre) :
+VISAS OBLIGATOIRES (dans cet ordre) :
 1. Vu la Constitution, notamment les articles 41, 162 et 170 §4
-2. Vu le décret du 14/12/2000 et la loi du 24/06/2000 (Charte européenne autonomie locale, art. 9.1)
-${p.typeReglement==="taxe"?"3. Vu le code des taxes assimilées aux impôts sur les revenus (si applicable)":""}
-4. Vu le CDLD, notamment L1122-30${p.typeReglement==="taxe"?" et L3321-1 à L3321-12":""}
-5. Vu les dispositions légales en matière d'établissement et de recouvrement des taxes communales
-6. Vu la circulaire budgétaire du 30 mai 2024
+2. Vu le décret du 14/12/2000 et la loi du 24/06/2000 (Charte européenne de l'autonomie locale, art. 9.1)
+${p.typeReglement==="taxe"?"3. Vu le code des taxes assimilées aux impôts sur les revenus (CTAIR)":"3. Vu les dispositions du CDLD relatives aux redevances communales"}
+4. Vu le CDLD, notamment les articles L1122-30${p.typeReglement==="taxe"?", L3321-1 à L3321-12":" et L1124-40"}
+5. Vu la circulaire budgétaire du 30 mai 2024
+6. Vu l'avis de légalité du Directeur financier, positif, joint en annexe
 
-CONSIDÉRANT :
-- Nécessité de ressources propres (mission de service public)
-${p.typeReglement==="redevance"?"- Justifier la CONTREPARTIE DIRECTE et les coûts engendrés":""}
-- Communication au Directeur financier (L1124-40 §1er, 3° et 4°)
-- Avis de légalité du Directeur financier, positif, joint en annexe
-- Sur proposition du Collège communal — Après en avoir délibéré
+CONSIDÉRANTS OBLIGATOIRES :
+- Nécessité de disposer de ressources propres pour financer les missions de service public
+${p.typeReglement==="redevance"?"- La redevance constitue la contrepartie directe d'un service rendu ou d'un avantage particulier, dont les coûts sont [À PRÉCISER]":""}
+- Le Directeur financier a été informé conformément à l'article L1124-40 §1er, 3° et 4° du CDLD
+- Sur proposition du Collège communal
 
 ARTICLES OBLIGATOIRES :
-Art. 1  — Objet : exercices ${p.periodeDebut} à ${p.periodeFin}, champ d'application exact
-Art. 2  — Redevable et fait générateur
-Art. 3  — Montant : ${p.tarif}
-Art. 4  — Déclaration : formulaire, 15 jours, obligation spontanée au 31/01
-Art. 5  — Taxation d'office (L3321-6 CDLD) : majoration 20%
-Art. 6  — Paiement : voie de rôle, 2 mois
-Art. 7  — Recouvrement : L3321-1 à L3321-12 CDLD + AR 12/04/1999 + sommation recommandée L3321-8bis
-Art. 8  — Réclamation : 6 mois (L3321-9 CDLD — ORDRE PUBLIC), Collège communal, recommandé, sous peine de déchéance
-Art. 9  — RGPD : responsable = ${p.commune||"la commune"}, finalité, durée 30 ans
-Art. 10 — Tutelle : Gouvernement wallon, L3131-1 et suivants, tutelle spéciale d'approbation
-Art. 11 — Publication et entrée en vigueur : L1133-1 et L1133-2 CDLD
+Art. 1er — Objet et exercices (${p.periodeDebut}–${p.periodeFin}) : définir précisément le champ d'application
+Art. 2   — Redevable et fait générateur
+Art. 3   — Montant (${p.tarif})${p.exonerations?" avec les exonérations suivantes : "+p.exonerations:""}
+Art. 4   — Déclaration : formulaire communal, délai 15 jours, obligation spontanée au 31 janvier
+Art. 5   — Taxation d'office en cas de défaut (L3321-6 CDLD) : majoration de 20 %
+Art. 6   — Paiement par voie de rôle, délai 2 mois
+Art. 7   — Recouvrement (L3321-1 à L3321-12 CDLD, AR 12/04/1999) avec sommation recommandée (L3321-8bis)
+Art. 8   — Réclamation dans les 6 mois (L3321-9 CDLD — ordre public), par recommandé au Collège, sous peine de déchéance
+Art. 9   — Protection des données (RGPD) : responsable = ${p.commune||"la commune"}, finalité fiscale, conservation 30 ans
+Art. 10  — Tutelle : Gouvernement wallon, L3131-1 et suivants, tutelle spéciale d'approbation
+Art. 11  — Publication et entrée en vigueur (L1133-1 et L1133-2 CDLD)
 
-FORMAT :
-- En-tête : Extrait du registre aux délibérations du CONSEIL COMMUNAL — Séance publique du [DATE SÉANCE]
-- Présents : [À COMPLÉTER]
-- Blocs Vu / Considérant / Décide à [unanimité/majorité]
-- Articles numérotés avec sous-titres
-- Pied : Par le Conseil communal — ${dirGenNom} — ${bourgNom}
-- Pour extrait conforme délivré le [DATE]
+RÈGLEMENTS DE RÉFÉRENCE VANDEN BROELE :
+${pf.length>0?pf:"(aucune référence disponible — appliquer strictement les exigences légales ci-dessus)"}`;
 
-Crochets [XXXXX] pour tout élément à compléter.
-Français administratif belge, sobre et précis. Aucun commentaire après le texte.
-IMPORTANT : N'utilise AUCUN formatage Markdown. Pas de **, pas de __, pas de #, pas de *. Texte brut uniquement.`;
+  return [
+    { role: "system", content: SYSTEM_REGLEMENT },
+    { role: "user",   content: userContent },
+  ];
 }
 
 // ─── COMPOSANT AUTOCOMPLETE ───────────────────────────────────────────────────
@@ -538,9 +684,321 @@ function RegleResultat({ r, i, coulGrav }) {
   );
 }
 
+// ─── BIBLIOTHÈQUE — FORMULAIRE ────────────────────────────────────────────────
+function FormulaireEntree({ initial, onSave, onCancel }) {
+  const [etape, setEtape]     = useState(initial ? "form" : "paste");
+  const [texte, setTexte]     = useState("");
+  const [busy, setBusy]       = useState(false);
+  const [errF, setErrF]       = useState("");
+  const [e, setE]             = useState(initial || VIDE_ENTREE());
+
+  const upd = (k,v) => setE(p=>({...p,[k]:v}));
+  const updArr = (k,v) => upd(k, v.split("\n").map(s=>s.trim()).filter(Boolean));
+  const toLines = arr => (arr||[]).join("\n");
+
+  const extraire = async () => {
+    if (!texte.trim()) return;
+    setBusy(true); setErrF("");
+    try {
+      const ex = await extraireAvecIA(texte);
+      setE(p=>({ ...p, ...ex, _local:true, id:p.id }));
+      setEtape("form");
+    } catch(err) { setErrF(err.message); }
+    finally { setBusy(false); }
+  };
+
+  const sauver = () => {
+    if (!e.commune||!e.objet||!e.categorie) { setErrF("Commune, objet et catégorie sont requis."); return; }
+    onSave(e);
+  };
+
+  const tA = (label, val, onChange, rows=3) => (
+    <div style={{marginBottom:12}}>
+      <label style={lS}>{label}</label>
+      <textarea style={{...iS,height:rows*22+18,resize:"vertical"}} value={val} onChange={e=>onChange(e.target.value)}/>
+    </div>
+  );
+  const iF = (label, val, onChange) => (
+    <div style={{marginBottom:12}}>
+      <label style={lS}>{label}</label>
+      <input style={iS} value={val||""} onChange={e=>onChange(e.target.value)}/>
+    </div>
+  );
+
+  return (
+    <div style={{background:C.blanc,borderRadius:10,border:`1px solid ${C.border}`,padding:24}}>
+      <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:20}}>
+        <h3 style={{margin:0,color:C.bleu,fontSize:16}}>{initial?"Modifier l'entrée":"Ajouter un règlement"}</h3>
+        <button onClick={onCancel} style={{background:"none",border:"none",fontSize:20,cursor:"pointer",color:C.gris}}>×</button>
+      </div>
+
+      {etape==="paste" && (
+        <>
+          <p style={{color:C.gris,fontSize:13,marginTop:0}}>Collez le texte complet du règlement. L'IA en extraira automatiquement les informations structurées.</p>
+          <textarea style={{...iS,height:220,resize:"vertical",fontFamily:"Georgia,serif",fontSize:12,lineHeight:1.6}}
+            placeholder="Collez ici le texte du règlement communal…" value={texte} onChange={e=>setTexte(e.target.value)}/>
+          {errF && <div style={{marginTop:8,padding:"8px 12px",background:C.rougeClair,color:C.rouge,borderRadius:6,fontSize:12}}>{errF}</div>}
+          <div style={{display:"flex",gap:10,marginTop:14}}>
+            <button onClick={extraire} disabled={busy||!texte.trim()}
+              style={{background:busy?C.gris:C.orange,color:C.blanc,border:"none",borderRadius:7,padding:"10px 22px",fontWeight:700,fontSize:13,cursor:busy?"not-allowed":"pointer"}}>
+              {busy?"⏳ Extraction…":"✨ Extraire avec l'IA"}
+            </button>
+            <button onClick={()=>setEtape("form")}
+              style={{background:C.grisClair,color:C.gris,border:`1px solid ${C.border}`,borderRadius:7,padding:"10px 18px",fontSize:13,cursor:"pointer"}}>
+              Encoder manuellement
+            </button>
+          </div>
+        </>
+      )}
+
+      {etape==="form" && (
+        <>
+          <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:"0 20px"}}>
+            {iF("Commune *", e.commune, v=>upd("commune",v))}
+            {iF("Année", e.annee, v=>upd("annee",parseInt(v)||e.annee))}
+            <div style={{marginBottom:12}}>
+              <label style={lS}>Type *</label>
+              <select style={iS} value={e.type} onChange={x=>upd("type",x.target.value)}>
+                <option value="taxe">Taxe</option>
+                <option value="redevance">Redevance</option>
+              </select>
+            </div>
+            <div style={{marginBottom:12}}>
+              <label style={lS}>Qualité</label>
+              <select style={iS} value={e.qualite} onChange={x=>upd("qualite",x.target.value)}>
+                <option value="brouillon">Brouillon</option>
+                <option value="valide">Validé</option>
+                <option value="reference">Référence</option>
+              </select>
+            </div>
+            <div style={{gridColumn:"1/-1",marginBottom:12}}>
+              <label style={lS}>Catégorie *</label>
+              <select style={iS} value={e.categorie} onChange={x=>upd("categorie",x.target.value)}>
+                <option value="">— Choisir —</option>
+                {CATEGORIES.map(c=><option key={c.slug} value={c.slug}>{c.label}</option>)}
+              </select>
+            </div>
+            <div style={{gridColumn:"1/-1"}}>
+              {iF("Objet du règlement *", e.objet, v=>upd("objet",v))}
+            </div>
+            <div style={{gridColumn:"1/-1"}}>
+              {iF("Période (ex : 2025-2030)", e.periode, v=>upd("periode",v))}
+            </div>
+          </div>
+
+          {tA("Visas (un par ligne)", toLines(e.visas), v=>updArr("visas",v), 4)}
+          {tA("Tarifs", e.tarifs||"", v=>upd("tarifs",v), 2)}
+          {tA("Exonérations (une par ligne)", toLines(e.exonerations), v=>updArr("exonerations",v), 2)}
+          {tA("Mots-clés (un par ligne)", toLines(e.mots_cles), v=>updArr("mots_cles",v), 2)}
+          {tA("Points forts (un par ligne)", toLines(e.points_forts), v=>updArr("points_forts",v), 3)}
+          {tA("Extrait du texte", e.extrait||"", v=>upd("extrait",v), 6)}
+
+          <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:"0 20px"}}>
+            {iF("N° délibération", e.source?.numero_deliberation, v=>upd("source",{...e.source,numero_deliberation:v}))}
+            {iF("Date séance (YYYY-MM-DD)", e.source?.date_seance, v=>upd("source",{...e.source,date_seance:v}))}
+          </div>
+
+          <div style={{display:"flex",alignItems:"center",gap:10,marginTop:4,marginBottom:16}}>
+            <input type="checkbox" id="pfv" checked={!!e.points_forts_valides} onChange={x=>upd("points_forts_valides",x.target.checked)}/>
+            <label htmlFor="pfv" style={{fontSize:13,color:C.bleu,cursor:"pointer"}}>Points forts validés par un juriste</label>
+          </div>
+
+          {errF && <div style={{marginBottom:12,padding:"8px 12px",background:C.rougeClair,color:C.rouge,borderRadius:6,fontSize:12}}>{errF}</div>}
+          <div style={{display:"flex",gap:10}}>
+            <button onClick={sauver}
+              style={{background:C.vert,color:C.blanc,border:"none",borderRadius:7,padding:"10px 24px",fontWeight:700,fontSize:13,cursor:"pointer"}}>
+              💾 Sauvegarder
+            </button>
+            {!initial && <button onClick={()=>setEtape("paste")}
+              style={{background:C.grisClair,color:C.gris,border:`1px solid ${C.border}`,borderRadius:7,padding:"10px 16px",fontSize:13,cursor:"pointer"}}>
+              ← Retour
+            </button>}
+            <button onClick={onCancel}
+              style={{background:C.blanc,color:C.rouge,border:`1px solid ${C.rouge}33`,borderRadius:7,padding:"10px 16px",fontSize:13,cursor:"pointer"}}>
+              Annuler
+            </button>
+          </div>
+        </>
+      )}
+    </div>
+  );
+}
+
+// ─── BIBLIOTHÈQUE — ONGLET ────────────────────────────────────────────────────
+function OngletBibliotheque({ biblio, setBiblio }) {
+  const [vue, setVue]         = useState("liste");
+  const [entreeEdit, setEdit] = useState(null);
+  const [recherche, setRech]  = useState("");
+  const [filtreType, setFT]   = useState("");
+  const [filtreCat, setFC]    = useState("");
+  const [filtreQ, setFQ]      = useState("");
+  const [publication, setPub] = useState({ busy:false, msg:"", ok:null });
+
+  const sauverEntree = (e) => {
+    setBiblio(prev => {
+      const idx = prev.findIndex(x=>x.id===e.id);
+      const next = idx>=0 ? prev.map((x,i)=>i===idx?e:x) : [...prev,e];
+      sauvegarderLocale(next.filter(x=>x._local));
+      return next;
+    });
+    setVue("liste"); setEdit(null);
+  };
+
+  const publier = async () => {
+    setPub({ busy:true, msg:"Publication en cours…", ok:null });
+    try {
+      await publierBiblio(biblio);
+      const nb = biblio.filter(r=>r._local).length;
+      setPub({ busy:false, msg:`✅ ${biblio.length} règlements publiés (dont ${nb} locaux). Redéploiement GitHub Actions en cours (~2 min).`, ok:true });
+    } catch(err) {
+      setPub({ busy:false, msg:`❌ ${err.message}`, ok:false });
+    }
+  };
+
+  const supprimerEntree = (id) => {
+    if (!confirm("Supprimer cette entrée ?")) return;
+    setBiblio(prev => {
+      const next = prev.filter(x=>x.id!==id);
+      sauvegarderLocale(next.filter(x=>x._local));
+      return next;
+    });
+  };
+
+  const filtre = biblio
+    .filter(r => (!filtreType||r.type===filtreType))
+    .filter(r => (!filtreCat||r.categorie===filtreCat))
+    .filter(r => (!filtreQ||r.qualite===filtreQ))
+    .filter(r => {
+      if (!recherche) return true;
+      const q = recherche.toLowerCase();
+      return [r.commune,r.objet,r.categorie,...(r.mots_cles||[])].join(" ").toLowerCase().includes(q);
+    });
+
+  const stats = {
+    total: biblio.length,
+    local: biblio.filter(r=>r._local).length,
+    ref:   biblio.filter(r=>r.qualite==="reference").length,
+    valid: biblio.filter(r=>r.qualite==="valide").length,
+  };
+
+  const bdgQ = { reference:{bg:C.vertClair,c:C.vert,l:"Référence"}, valide:{bg:C.bleuLight,c:C.bleu,l:"Validé"}, brouillon:{bg:C.jauneClair,c:C.jaune,l:"Brouillon"} };
+  const bdgT = { taxe:{bg:C.orangeLight,c:C.orange}, redevance:{bg:C.bleuLight,c:C.bleu} };
+
+  if (vue==="form" || vue==="edit") return (
+    <FormulaireEntree
+      initial={entreeEdit}
+      onSave={sauverEntree}
+      onCancel={()=>{ setVue("liste"); setEdit(null); }}
+    />
+  );
+
+  return (
+    <div>
+      {/* Stats */}
+      <div style={{display:"grid",gridTemplateColumns:"repeat(4,1fr)",gap:12,marginBottom:16}}>
+        {[
+          {l:"Total",       v:stats.total, bg:C.bleuLight,  c:C.bleu},
+          {l:"Locaux",      v:stats.local, bg:C.jauneClair, c:C.jaune},
+          {l:"Validés",     v:stats.valid, bg:C.bleuLight,  c:C.bleu},
+          {l:"Références",  v:stats.ref,   bg:C.vertClair,  c:C.vert},
+        ].map(({l,v,bg,c})=>(
+          <div key={l} style={{background:bg,border:`1px solid ${c}22`,borderRadius:8,padding:"10px 14px",textAlign:"center"}}>
+            <div style={{fontSize:24,fontWeight:800,color:c}}>{v}</div>
+            <div style={{fontSize:11,color:c,fontWeight:600}}>{l}</div>
+          </div>
+        ))}
+      </div>
+
+      {/* Barre d'outils */}
+      <div style={{background:C.blanc,borderRadius:10,border:`1px solid ${C.border}`,padding:16,marginBottom:16,display:"flex",gap:10,flexWrap:"wrap",alignItems:"center"}}>
+        <input style={{...iS,flex:"1 1 180px",minWidth:140}} placeholder="Rechercher…" value={recherche} onChange={e=>setRech(e.target.value)}/>
+        <select style={{...iS,flex:"0 0 130px"}} value={filtreType} onChange={e=>setFT(e.target.value)}>
+          <option value="">Tous types</option>
+          <option value="taxe">Taxe</option>
+          <option value="redevance">Redevance</option>
+        </select>
+        <select style={{...iS,flex:"0 0 200px"}} value={filtreCat} onChange={e=>setFC(e.target.value)}>
+          <option value="">Toutes catégories</option>
+          {CATEGORIES.map(c=><option key={c.slug} value={c.slug}>{c.label}</option>)}
+        </select>
+        <select style={{...iS,flex:"0 0 130px"}} value={filtreQ} onChange={e=>setFQ(e.target.value)}>
+          <option value="">Toutes qualités</option>
+          <option value="reference">Référence</option>
+          <option value="valide">Validé</option>
+          <option value="brouillon">Brouillon</option>
+        </select>
+        <button onClick={()=>{setEdit(null);setVue("form");}}
+          style={{background:C.orange,color:C.blanc,border:"none",borderRadius:7,padding:"9px 18px",fontWeight:700,fontSize:13,cursor:"pointer",whiteSpace:"nowrap"}}>
+          + Ajouter
+        </button>
+        <button onClick={()=>exporterBiblio(biblio)}
+          style={{background:C.bleuLight,color:C.bleu,border:`1px solid ${C.bleu}33`,borderRadius:7,padding:"9px 16px",fontSize:13,cursor:"pointer",fontWeight:600,whiteSpace:"nowrap"}}>
+          ⬇ Exporter JSON
+        </button>
+        <button onClick={publier} disabled={publication.busy}
+          style={{background:publication.busy?C.gris:C.vert,color:C.blanc,border:"none",borderRadius:7,padding:"9px 18px",fontSize:13,cursor:publication.busy?"not-allowed":"pointer",fontWeight:700,whiteSpace:"nowrap"}}>
+          {publication.busy?"⏳ Publication…":"🚀 Publier dans le repo"}
+        </button>
+      </div>
+
+      {publication.msg && (
+        <div style={{marginBottom:14,padding:"10px 14px",background:publication.ok?C.vertClair:publication.ok===false?C.rougeClair:C.jauneClair,
+          border:`1px solid ${publication.ok?C.vert:publication.ok===false?C.rouge:C.jaune}`,borderRadius:7,fontSize:13,
+          color:publication.ok?C.vert:publication.ok===false?C.rouge:C.jaune}}>
+          {publication.msg}
+        </div>
+      )}
+
+      {/* Liste */}
+      <div style={{fontSize:12,color:C.gris,marginBottom:10}}>{filtre.length} règlement(s) affiché(s)</div>
+      <div style={{display:"grid",gap:10}}>
+        {filtre.length===0 && (
+          <div style={{background:C.blanc,borderRadius:10,border:`1px solid ${C.border}`,padding:32,textAlign:"center",color:C.gris}}>
+            Aucun règlement ne correspond aux filtres.
+          </div>
+        )}
+        {filtre.map(r=>{
+          const q = bdgQ[r.qualite]||bdgQ.brouillon;
+          const t = bdgT[r.type]||bdgT.taxe;
+          return (
+            <div key={r.id} style={{background:C.blanc,borderRadius:10,border:`1px solid ${C.border}`,padding:"14px 18px",display:"flex",gap:14,alignItems:"flex-start"}}>
+              <div style={{flex:1,minWidth:0}}>
+                <div style={{display:"flex",gap:6,flexWrap:"wrap",marginBottom:6}}>
+                  <span style={{background:t.bg,color:t.c,padding:"2px 9px",borderRadius:10,fontSize:11,fontWeight:700,textTransform:"uppercase"}}>{r.type}</span>
+                  <span style={{background:q.bg,color:q.c,padding:"2px 9px",borderRadius:10,fontSize:11,fontWeight:600}}>{q.l}</span>
+                  {r._local&&<span style={{background:C.jauneClair,color:C.jaune,padding:"2px 9px",borderRadius:10,fontSize:11}}>Local</span>}
+                </div>
+                <div style={{fontWeight:700,fontSize:14,color:C.bleu,marginBottom:2}}>{r.commune||"—"} {r.annee?`(${r.annee})`:""}</div>
+                <div style={{fontSize:13,color:C.gris,marginBottom:4}}>{r.objet||r.titre||"—"}</div>
+                <div style={{display:"flex",gap:12,fontSize:11,color:C.gris,flexWrap:"wrap"}}>
+                  {r.categorie&&<span>{CATEGORIES.find(c=>c.slug===r.categorie)?.label||r.categorie}</span>}
+                  {(r.visas||[]).length>0&&<span>📋 {r.visas.length} visa(s)</span>}
+                  {(r.points_forts||[]).length>0&&<span>⭐ {r.points_forts.length} point(s) fort(s)</span>}
+                  {r.points_forts_valides&&<span style={{color:C.vert}}>✅ Juriste</span>}
+                </div>
+              </div>
+              <div style={{display:"flex",gap:6,flexShrink:0}}>
+                <button onClick={()=>{setEdit(r);setVue("edit");}}
+                  style={{background:C.bleuLight,color:C.bleu,border:"none",borderRadius:6,padding:"6px 12px",fontSize:12,cursor:"pointer",fontWeight:600}}>
+                  ✏️
+                </button>
+                {r._local&&<button onClick={()=>supprimerEntree(r.id)}
+                  style={{background:C.rougeClair,color:C.rouge,border:"none",borderRadius:6,padding:"6px 12px",fontSize:12,cursor:"pointer"}}>
+                  🗑️
+                </button>}
+              </div>
+            </div>
+          );
+        })}
+      </div>
+    </div>
+  );
+}
+
 // ─── COMPOSANT PRINCIPAL ──────────────────────────────────────────────────────
 export default function App() {
   const [onglet, setOnglet] = useState("generer");
+  const [biblio, setBiblio] = useState(()=>mergerBiblio());
   const [params, setParams] = useState({
     commune:"", ins:"", cp:"", province:"", arrondissement:"", population:null,
     nomCourt:"", adresse:"", emailGeneral:"", telephone:"",
@@ -580,12 +1038,12 @@ export default function App() {
   const generer = useCallback(async () => {
     if (!params.objet||!params.redevable||!params.tarif) { setErreur("Champs requis : objet, redevable et tarif."); return; }
     setErreur(""); setLoading(true); setTexteGenere(""); streamRef.current=""; setEtape("generation");
-    const refs = trouverRefs(params.objet, params.typeReglement, params.categorie);
+    const refs = trouverRefs(params.objet, params.typeReglement, params.categorie, biblio);
     try {
-      const res = await fetch(`${WORKER_URL}/anthropic/v1/messages`, {
+      const res = await fetch(`${WORKER_URL}/openai/v1/chat/completions`, {
         method:"POST", headers:{"Content-Type":"application/json"},
-        body: JSON.stringify({model:"claude-sonnet-4-20250514", max_tokens:4000, stream:true,
-          messages:[{role:"user", content:buildPrompt(params,refs,mandataires)}]}),
+        body: JSON.stringify({model:"gpt-4o", max_tokens:4000, stream:true,
+          messages:buildMessages(params,refs,mandataires)}),
       });
       if (!res.ok) { const e=await res.text(); throw new Error(`API ${res.status} : ${e}`); }
       const reader=res.body.getReader(), dec=new TextDecoder();
@@ -594,7 +1052,7 @@ export default function App() {
         for(const line of dec.decode(value,{stream:true}).split("\n")){
           if(!line.startsWith("data: ")) continue;
           const d=line.slice(6).trim(); if(d==="[DONE]") break;
-          try{ const delta=JSON.parse(d)?.delta?.text||""; if(delta){streamRef.current+=delta; setTexteGenere(streamRef.current);} }catch{}
+          try{ const delta=JSON.parse(d)?.choices?.[0]?.delta?.content||""; if(delta){streamRef.current+=delta; setTexteGenere(streamRef.current);} }catch{}
         }
       }
       setEtape("resultat");
@@ -616,7 +1074,7 @@ export default function App() {
 
   const coulGrav = {erreur:C.rouge, avertissement:C.jaune, info:C.bleu};
   const labelGrav = {erreur:"❌ Erreurs bloquantes", avertissement:"⚠️ Avertissements", info:"ℹ️ Bonnes pratiques"};
-  const nbRefs = SOURCE.filter(r=>r.type===params.typeReglement&&(!params.categorie||r.categorie===params.categorie)&&r.qualite!=="insuffisante").length;
+  const nbRefs = biblio.filter(r=>r.type===params.typeReglement&&(!params.categorie||r.categorie===params.categorie)&&r.qualite!=="insuffisante"&&r.qualite!=="brouillon").length;
 
   return (
     <div style={{fontFamily:"'Segoe UI',Arial,sans-serif",background:C.grisClair,minHeight:"100vh"}}>
@@ -625,12 +1083,12 @@ export default function App() {
         <div style={{background:C.orange,borderRadius:8,width:36,height:36,display:"flex",alignItems:"center",justifyContent:"center",fontWeight:700,fontSize:18}}>VB</div>
         <div>
           <div style={{fontWeight:700,fontSize:16}}>Assistant Règlements — OrangeConnect</div>
-          <div style={{fontSize:12,opacity:.75}}>Taxes et redevances wallonnes · v5 · {SOURCE.length} règlements</div>
+          <div style={{fontSize:12,opacity:.75}}>Taxes et redevances wallonnes · v6 · {biblio.length} règlements</div>
         </div>
       </div>
 
       <div style={{background:C.blanc,borderBottom:`2px solid ${C.border}`,display:"flex",padding:"0 24px"}}>
-        {[["generer","✏️ Rédiger"],["verifier","✅ Vérifier"]].map(([k,l])=>(
+        {[["generer","✏️ Rédiger"],["verifier","✅ Vérifier"],["bibliotheque","📚 Bibliothèque"]].map(([k,l])=>(
           <button key={k} onClick={()=>{setOnglet(k);setErreur("");}}
             style={{padding:"12px 20px",border:"none",background:"none",cursor:"pointer",fontWeight:600,fontSize:14,
               color:onglet===k?C.orange:C.gris,borderBottom:onglet===k?`3px solid ${C.orange}`:"3px solid transparent",marginBottom:-2}}>
@@ -786,6 +1244,11 @@ export default function App() {
               </>
             )}
           </>
+        )}
+
+        {/* ══ ONGLET BIBLIOTHÈQUE ══ */}
+        {onglet==="bibliotheque"&&(
+          <OngletBibliotheque biblio={biblio} setBiblio={setBiblio}/>
         )}
 
         <div style={{marginTop:24,background:C.bleuLight,borderRadius:10,border:`1px solid ${C.bleu}22`,padding:18}}>
