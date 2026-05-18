@@ -492,7 +492,7 @@ Population : ${p.population?p.population.toLocaleString("fr-BE")+" hab.":"non pr
 PARAMÈTRES DU RÈGLEMENT :
 - Catégorie : ${catLabel||"Non précisée"}
 - Objet : ${p.objet}
-- Type : ${p.typeReglement}
+- Type : ${p.typeReglement}${p.typeReglement==="redevance"?" ("+( p.sousTypeRedevance==="autorisation"?"autorisation d'occupation du domaine public":"service rendu / usage")+")":""}
 - Exercices : ${p.periodeDebut} à ${p.periodeFin}
 - Redevable : ${p.redevable}
 - Tarif : ${p.tarif}
@@ -517,8 +517,11 @@ ARTICLES OBLIGATOIRES :
 Art. 1er — Objet et exercices (${p.periodeDebut}–${p.periodeFin}) : définir précisément le champ d'application
 Art. 2   — Redevable et fait générateur
 Art. 3   — Montant (${p.tarif})${p.exonerations?" avec les exonérations suivantes : "+p.exonerations:""}
-Art. 4   — Déclaration : formulaire communal, délai 15 jours, obligation spontanée au 31 janvier
-Art. 5   — Taxation d'office en cas de défaut (L3321-6 CDLD) : majoration de 20 %
+${p.typeReglement==="redevance" && p.sousTypeRedevance==="autorisation"
+  ? `Art. 4   — Autorisation préalable : le redevable introduit une demande d'autorisation auprès du Collège communal avant toute occupation ; la redevance est calculée sur la durée accordée et notifiée avec la décision d'autorisation
+Art. 5   — Occupation sans autorisation : en cas d'occupation sans autorisation préalable, une redevance majorée de 100 % est réclamée, sans préjudice des mesures de police administrative et de la mise en demeure de libérer le domaine public (L2213-1 et suiv. CDLD)`
+  : `Art. 4   — Déclaration : formulaire communal, délai 15 jours${p.typeReglement==="redevance" ? " suivant la naissance du fait générateur" : ", obligation spontanée au 31 janvier"}
+Art. 5   — ${p.typeReglement==="redevance" ? "Défaut de déclaration : redevance établie d'office par le Collège sur base des éléments en sa possession, avec frais de procédure à charge du redevable" : "Taxation d'office en cas de défaut (L3321-6 CDLD) : majoration de 20 %"}`}
 ${p.typeReglement==="redevance"
   ? "Art. 6   — Mode de perception et exigibilité : redevance exigible dès l'obtention de l'autorisation, payable au comptant à la caisse communale contre reçu ; à défaut, payable dans les 30 jours suivant la réception de l'invitation à payer, intérêts légaux de plein droit"
   : "Art. 6   — Paiement par voie de rôle, délai 2 mois à compter de l'envoi de l'avertissement-extrait de rôle"}
@@ -1004,7 +1007,7 @@ export default function App() {
   const [params, setParams] = useState({
     commune:"", ins:"", cp:"", province:"", arrondissement:"", population:null,
     nomCourt:"", adresse:"", emailGeneral:"", telephone:"",
-    typeReglement:"taxe", categorie:"", objet:"",
+    typeReglement:"taxe", sousTypeRedevance:"autorisation", categorie:"", objet:"",
     periodeDebut: String(new Date().getFullYear()+1),
     periodeFin:   String(new Date().getFullYear()+6),
     redevable:"", tarif:"", exonerations:"", infoCompl:"",
@@ -1144,6 +1147,15 @@ export default function App() {
                     <option value="redevance">Règlement-redevance (contrepartie directe)</option>
                   </select>
                 </div>
+                {params.typeReglement==="redevance" && (
+                  <div>
+                    <label style={lS}>Sous-type de redevance</label>
+                    <select style={iS} value={params.sousTypeRedevance} onChange={e=>upd("sousTypeRedevance",e.target.value)}>
+                      <option value="autorisation">Autorisation d'occupation (terrasse, enseigne, chantier…)</option>
+                      <option value="service">Service rendu / usage (déchets, documents admin…)</option>
+                    </select>
+                  </div>
+                )}
                 <div style={{display:"flex",gap:8}}>
                   <div style={{flex:1}}><label style={lS}>Exercice début</label><input style={iS} value={params.periodeDebut} onChange={e=>upd("periodeDebut",e.target.value)}/></div>
                   <div style={{flex:1}}><label style={lS}>Exercice fin</label><input style={iS} value={params.periodeFin} onChange={e=>upd("periodeFin",e.target.value)}/></div>
