@@ -1376,5 +1376,39 @@
     "extrait": "Vu la Constitution, notamment les articles 41, 162 al.2, 2°, 170 § 4 et 173 ; Vu le décret du 14 décembre 2000 (M.B. 18.1.2001) et la loi du 24 juin 2000 (M.B. 23.9.2004, éd. 2) portant assentiment de la Charte européenne de l'autonomie locale, notamment l'article 9.1. de la Charte ; Vu la première partie du Code de la Démocratie Locale et de la Décentralisation, notamment les articles L1122-30 et L1124-40 ; Considérant que la grande majorité des redevables de la taxe ne contribue pas ou très peu au financement de la Commune étant généralement des entreprises extérieures à elle, alors même que la sollicitation des habitants de la Commune leur apporte, ou à tout le moins via les annonceurs finaux, une clientèle potentielle, sans contrepartie pour la Commune",
     "qualite": "bonne",
     "points_forts_valides": true
+  },
+  {
+    "id": "local-1779106499526",
+    "commune": "Wavre",
+    "type": "redevance",
+    "categorie": "domaine-public",
+    "annee": 2019,
+    "periode": "2019-2025",
+    "objet": "Occupation du domaine public par le placement de terrasses, tables et chaises sur des emplacements de stationnement payant",
+    "mots_cles": [
+      "redevance",
+      "domaine public",
+      "terrasses",
+      "stationnement",
+      "Horeca"
+    ],
+    "visas": [
+      "Vu les articles 41, 162, 170, $ 4 et 173 de la Constitution",
+      "Vu le CDLD L1122-30",
+      "Vu le règlement-redevance sur le stationnement payant 2019-2025"
+    ],
+    "tarifs": "La redevance forfaitaire mensuelle est fixée à 8,00 € par mois et par m2 de surface occupée.",
+    "exonerations": [],
+    "points_forts": [
+      "La procédure de réclamation sans coût via le Collège communal",
+      "Différenciation objective basée sur l'objet et la nature de la redevance"
+    ],
+    "extrait": "Considérant que la redevance de réservation journalière d'emplacement de stationnement, prévue dans le règlement-redevance sur le stationnement payant et la carte de riverain 2019-2025, ne permettrait pas aux établissements Horeca concernés d'assumer ce coût sans subir un désavantage disproportionné par rapport aux autres établissements qui installent des terrasses en espace public gratuit ;",
+    "source": {
+      "numero_deliberation": "18",
+      "date_seance": "2019-05-28"
+    },
+    "qualite": "brouillon",
+    "points_forts_valides": true
   }
 ]
