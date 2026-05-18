@@ -1442,6 +1442,9 @@ export default function App() {
   const [etape, setEtape] = useState("formulaire");
   const [profil, setProfil] = useState(()=>chargerProfil());
   const [showProfil, setShowProfil] = useState(false);
+  const [texteLibre, setTexteLibre] = useState("");
+  const [qualifBusy, setQualifBusy] = useState(false);
+  const [qualifMsg, setQualifMsg] = useState(null); // {ok, texte, explication}
   const streamRef = useRef("");
 
   const upd = (k,v) => setParams(p=>({...p,[k]:v}));
@@ -1492,6 +1495,64 @@ export default function App() {
     } catch(e){ setErreur(`Erreur : ${e.message}`); setEtape("formulaire"); }
     finally{ setLoading(false); }
   }, [params, mandataires]);
+
+  const qualifier = async () => {
+    if (!texteLibre.trim()) return;
+    setQualifBusy(true); setQualifMsg(null);
+    const catList = CATEGORIES.map(c =>
+      `${c.slug} (${c.label}):\n${(c.sous||[]).map(s=>`  ${s.slug} (${s.label})`).join("\n")}`
+    ).join("\n");
+    const system = `Tu es un expert en droit communal wallon. Analyse la description d'un DG et retourne UNIQUEMENT un objet JSON valide.
+Règle taxe vs redevance :
+- taxe = prélèvement unilatéral (l'administré a un bien, une activité, une situation) — pas de prestation de la commune en échange direct.
+- redevance = contrepartie directe d'une autorisation accordée (sousTypeRedevance = "autorisation") ou d'un service rendu par la commune (sousTypeRedevance = "service").`;
+    const user = `Description : "${texteLibre}"
+
+Retourne exactement ce JSON (tous les champs requis) :
+{
+  "typeReglement": "taxe" ou "redevance",
+  "sousTypeRedevance": "autorisation" | "service" | "",
+  "categorie": "[slug parmi la liste]",
+  "sousCat": "[slug sous-cat parmi la liste]",
+  "objet": "[formulation officielle courte, 15 mots max]",
+  "redevable": "[qui est redevable, 15 mots max]",
+  "explication": "[justification du choix taxe/redevance et catégorie, 2 phrases max]"
+}
+
+CATÉGORIES DISPONIBLES :
+${catList}`;
+    try {
+      const res = await fetch(`${WORKER_URL}/openai/v1/chat/completions`, {
+        method:"POST", headers:{"Content-Type":"application/json"},
+        body: JSON.stringify({
+          model:"gpt-4o", max_tokens:400,
+          response_format:{ type:"json_object" },
+          messages:[{role:"system",content:system},{role:"user",content:user}],
+        }),
+      });
+      if (!res.ok) throw new Error(`API ${res.status}`);
+      const data = await res.json();
+      const q = JSON.parse(data.choices[0].message.content);
+      // Valider les slugs reçus
+      const catOk = CATEGORIES.find(c=>c.slug===q.categorie);
+      const sousCatOk = catOk?.sous?.find(s=>s.slug===q.sousCat);
+      setParams(p=>({
+        ...p,
+        typeReglement: ["taxe","redevance"].includes(q.typeReglement) ? q.typeReglement : p.typeReglement,
+        sousTypeRedevance: ["autorisation","service"].includes(q.sousTypeRedevance) ? q.sousTypeRedevance : p.sousTypeRedevance,
+        categorie: catOk ? q.categorie : p.categorie,
+        sousCat: sousCatOk ? q.sousCat : "",
+        objet: q.objet || p.objet,
+        redevable: q.redevable || p.redevable,
+      }));
+      const typeLabel = q.typeReglement==="taxe" ? "Règlement-taxe" : "Règlement-redevance";
+      const catLabel = catOk?.label || q.categorie;
+      const sousCatLabel = sousCatOk?.label || "";
+      setQualifMsg({ ok:true, texte:`${typeLabel} · ${catLabel}${sousCatLabel?" — "+sousCatLabel:""}`, explication:q.explication||"" });
+    } catch(e) {
+      setQualifMsg({ ok:false, texte:`Qualification impossible : ${e.message}`, explication:"" });
+    } finally { setQualifBusy(false); }
+  };
 
   const handleExportDocx = async () => {
     try {
@@ -1552,6 +1613,40 @@ export default function App() {
         {/* ══ ONGLET RÉDIGER ══ */}
         {onglet==="generer" && (
           <>
+            {/* Assistant de qualification */}
+            <div style={{background:`linear-gradient(135deg,${C.bleu} 0%,#2A5A8C 100%)`,borderRadius:10,padding:20,marginBottom:20,color:C.blanc}}>
+              <div style={{fontWeight:700,fontSize:15,marginBottom:4}}>✨ Assistant de qualification</div>
+              <div style={{fontSize:12,opacity:.8,marginBottom:14}}>Décrivez librement ce que vous souhaitez taxer ou faire payer — l'IA remplit le formulaire automatiquement.</div>
+              <div style={{display:"flex",gap:10,alignItems:"flex-start"}}>
+                <textarea
+                  value={texteLibre}
+                  onChange={e=>setTexteLibre(e.target.value)}
+                  onKeyDown={e=>{if(e.key==="Enter"&&(e.ctrlKey||e.metaKey))qualifier();}}
+                  placeholder="ex. : occupation du domaine public par une terrasse horeca, location de la salle communale, taxe sur les secondes résidences…"
+                  rows={2}
+                  style={{flex:1,padding:"9px 12px",borderRadius:7,border:"1px solid rgba(255,255,255,.3)",background:"rgba(255,255,255,.12)",color:C.blanc,fontSize:13,fontFamily:"'Segoe UI',Arial,sans-serif",resize:"none",outline:"none","::placeholder":{color:"rgba(255,255,255,.5)"}}}
+                />
+                <button onClick={qualifier} disabled={qualifBusy||!texteLibre.trim()}
+                  style={{background:qualifBusy||!texteLibre.trim()?C.gris:C.orange,color:C.blanc,border:"none",borderRadius:7,padding:"9px 18px",fontWeight:700,fontSize:13,cursor:qualifBusy||!texteLibre.trim()?"not-allowed":"pointer",whiteSpace:"nowrap",minWidth:110}}>
+                  {qualifBusy?"⏳ Analyse…":"Qualifier →"}
+                </button>
+              </div>
+              <div style={{fontSize:11,opacity:.55,marginTop:6}}>Ctrl+Entrée pour soumettre</div>
+              {qualifMsg && (
+                <div style={{marginTop:12,padding:"10px 14px",borderRadius:7,
+                  background:qualifMsg.ok?"rgba(255,255,255,.15)":"rgba(220,38,38,.3)",
+                  border:`1px solid ${qualifMsg.ok?"rgba(255,255,255,.3)":"rgba(220,38,38,.5)"}`,
+                  display:"flex",gap:10,alignItems:"flex-start"}}>
+                  <span style={{fontSize:16,lineHeight:1}}>{qualifMsg.ok?"✅":"❌"}</span>
+                  <div style={{flex:1}}>
+                    <div style={{fontWeight:700,fontSize:13}}>{qualifMsg.texte}</div>
+                    {qualifMsg.explication && <div style={{fontSize:12,opacity:.85,marginTop:3}}>{qualifMsg.explication}</div>}
+                  </div>
+                  <button onClick={()=>setQualifMsg(null)} style={{background:"none",border:"none",color:C.blanc,opacity:.6,cursor:"pointer",fontSize:16,lineHeight:1,padding:0}}>×</button>
+                </div>
+              )}
+            </div>
+
             <div style={{background:C.blanc,borderRadius:10,border:`1px solid ${C.border}`,padding:24,marginBottom:20}}>
               <h3 style={{color:C.bleu,marginTop:0,fontSize:16,marginBottom:16}}>Paramètres du règlement</h3>
               <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:16}}>
