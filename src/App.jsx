@@ -1542,6 +1542,8 @@ Retourne exactement ce JSON (tous les champs requis) :
   "sousCat": "[slug sous-cat parmi la liste]",
   "objet": "[formulation officielle courte, 15 mots max]",
   "redevable": "[qui est redevable, 15 mots max]",
+  "tarif": "[montant(s) et unité tels que mentionnés dans la description — chaîne vide si non précisé]",
+  "exonerations": "[cas d'exonération mentionnés dans la description — chaîne vide si non précisé]",
   "explication": "[justification du choix taxe/redevance et catégorie, 2 phrases max]"
 }
 
@@ -1551,7 +1553,7 @@ ${catList}`;
       const res = await fetch(`${WORKER_URL}/openai/v1/chat/completions`, {
         method:"POST", headers:{"Content-Type":"application/json"},
         body: JSON.stringify({
-          model:"gpt-4o", max_tokens:400,
+          model:"gpt-4o", max_tokens:600,
           response_format:{ type:"json_object" },
           messages:[{role:"system",content:system},{role:"user",content:user}],
         }),
@@ -1570,6 +1572,8 @@ ${catList}`;
         sousCat: sousCatOk ? q.sousCat : "",
         objet: q.objet || p.objet,
         redevable: q.redevable || p.redevable,
+        tarif: q.tarif || p.tarif,
+        exonerations: q.exonerations || p.exonerations,
       }));
       const typeLabel = q.typeReglement==="taxe" ? "Règlement-taxe" : "Règlement-redevance";
       const catLabel = catOk?.label || q.categorie;
