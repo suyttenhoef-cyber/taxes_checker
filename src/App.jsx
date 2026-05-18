@@ -420,22 +420,28 @@ function verifier(t) {
   });
 }
 
-const SYSTEM_REGLEMENT = `Tu es un expert en droit communal wallon travaillant pour Vanden Broele.
+function buildSystemPrompt(dateSeance, listePresents, listeAbsents) {
+  const dateStr = dateSeance
+    ? new Date(dateSeance).toLocaleDateString("fr-BE", {day:"numeric", month:"long", year:"numeric"})
+    : "[DATE DE LA SÉANCE]";
+  const presStr = listePresents || "[LISTE DES CONSEILLERS PRÉSENTS]";
+  const absStr  = listeAbsents  || "Néant";
+  return `Tu es un expert en droit communal wallon travaillant pour Vanden Broele.
 Tu rédiges des règlements communaux wallons complets et conformes à la législation wallonne.
 
 RÈGLES DE FORME ABSOLUES :
 - Aucun formatage Markdown (pas de **, ##, *, _, ---)
 - Texte brut uniquement, français administratif belge sobre et précis
-- Crochets [XXXXX] pour tout élément à compléter par la commune
+- Crochets [XXXXX] uniquement pour les éléments qui restent à compléter par la commune (vote, date de publication…)
 - Aucun commentaire ni explication après le texte du règlement
 
 STRUCTURE OBLIGATOIRE — respecte exactement ce squelette, section par section :
 
 EXTRAIT DU REGISTRE AUX DÉLIBÉRATIONS DU CONSEIL COMMUNAL
-Séance publique du [DATE DE LA SÉANCE]
+Séance publique du ${dateStr}
 
-Présents : [LISTE DES CONSEILLERS PRÉSENTS]
-Absent(s) excusé(s) : [LE CAS ÉCHÉANT]
+Présents : ${presStr}
+Absent(s) excusé(s) : ${absStr}
 
 OBJET : [INTITULÉ COMPLET DU RÈGLEMENT]
 
@@ -470,12 +476,29 @@ Le(La) Directeur(trice) général(e),          Le(La) Bourgmestre,
 
 
 Pour extrait conforme délivré le [DATE]`;
+}
 
-function buildMessages(p, refs, mandataires) {
+function buildMessages(p, refs, mandataires, presences) {
+  const nomM = m => `${m.detail_civilite||""} ${m.detail_prenom||""} ${m.detail_nom||""}`.trim();
   const bourg = mandataires.find(m => /bourgmestre/i.test(m.detail_fonction));
-  const bourgNom = bourg ? `${bourg.detail_civilite||""} ${bourg.detail_prenom||""} ${bourg.detail_nom||""}`.trim() : "[NOM BOURGMESTRE]";
+  const bourgNom = bourg ? nomM(bourg) : "[NOM BOURGMESTRE]";
   const dirGen = mandataires.find(m => /directeur|directrice\s+g[eé]n[eé]ral/i.test(m.detail_fonction));
-  const dirGenNom = dirGen ? `${dirGen.detail_civilite||""} ${dirGen.detail_prenom||""} ${dirGen.detail_nom||""}`.trim() : "[NOM DIRECTEUR GÉNÉRAL]";
+  const dirGenNom = dirGen ? nomM(dirGen) : "[NOM DIRECTEUR GÉNÉRAL]";
+
+  // Listes présents / absents depuis les cases à cocher
+  const conseil = mandataires.filter(m => !/directeur|directrice/i.test(m.detail_fonction));
+  const listePresents = conseil.filter((_, i) => presences[i] !== false).map(nomM).join(", ");
+  const listeAbsents  = conseil.filter((_, i) => presences[i] === false).map(nomM).join(", ") || null;
+
+  // CONSIDÉRANT contrepartie redevance (sans placeholder)
+  const considRedevance = p.typeReglement==="redevance"
+    ? `- La redevance constitue la contrepartie directe ${
+        p.sousTypeRedevance==="autorisation"
+          ? `de l'avantage particulier que représente l'occupation du domaine public communal pour ${p.objet||"l'activité concernée"}, les frais de gestion, de contrôle et d'entretien du domaine étant couverts par le tarif de ${p.tarif}`
+          : `du service rendu par la commune consistant en ${p.objet||"l'activité concernée"}, les coûts directs de ce service étant répercutés sur le bénéficiaire à hauteur du tarif de ${p.tarif}`
+      }`
+    : "";
+
   const catLabel = CATEGORIES.find(c=>c.slug===p.categorie)?.label||"";
   const pf = refs.map(r =>
     `${r.titre} (${r.commune}, ${r.annee})\nPoints forts :\n${r.points_forts.map(x=>`- ${x}`).join("\n")}\nExtrait :\n${r.extrait}`
@@ -509,7 +532,7 @@ ${p.typeReglement==="taxe"?"3. Vu le code des taxes assimilées aux impôts sur 
 
 CONSIDÉRANTS OBLIGATOIRES :
 - Nécessité de disposer de ressources propres pour financer les missions de service public
-${p.typeReglement==="redevance"?"- La redevance constitue la contrepartie directe d'un service rendu ou d'un avantage particulier, dont les coûts sont [À PRÉCISER]":""}
+${considRedevance}
 - Le Directeur financier a été informé conformément à l'article L1124-40 §1er, 3° et 4° du CDLD
 - Sur proposition du Collège communal
 
@@ -535,7 +558,7 @@ RÈGLEMENTS DE RÉFÉRENCE VANDEN BROELE :
 ${pf.length>0?pf:"(aucune référence disponible — appliquer strictement les exigences légales ci-dessus)"}`;
 
   return [
-    { role: "system", content: SYSTEM_REGLEMENT },
+    { role: "system", content: buildSystemPrompt(p.dateSeance, listePresents, listeAbsents) },
     { role: "user",   content: userContent },
   ];
 }
@@ -632,6 +655,69 @@ function CarteMandataires({ data, loading, commune }) {
             {echev.length>3&&<div style={{fontSize:11,color:C.gris}}>+{echev.length-3} autres</div>}
           </div>
         )}
+      </div>
+    </div>
+  );
+}
+
+// ─── PANEL PRÉSENTS / ABSENTS ─────────────────────────────────────────────────
+function PanelPresences({ mandataires, presences, onChange }) {
+  if (!mandataires || mandataires.length === 0) return null;
+  const conseil = mandataires.filter(m => !/directeur|directrice/i.test(m.detail_fonction));
+  if (conseil.length === 0) return null;
+
+  const nomM = m => `${m.detail_civilite||""} ${m.detail_prenom||""} ${m.detail_nom||""}`.trim();
+  const toggle = i => onChange(prev => {
+    const next = {...prev};
+    if (next[i] === false) delete next[i]; else next[i] = false;
+    return next;
+  });
+
+  const nbPresents = conseil.filter((_, i) => presences[i] !== false).length;
+  const nbAbsents  = conseil.length - nbPresents;
+
+  const groupes = [
+    { label:"Bourgmestre",          filtre: m => /bourgmestre/i.test(m.detail_fonction) },
+    { label:"Échevins",             filtre: m => /[eé]chevin/i.test(m.detail_fonction)  },
+    { label:"Conseillers communaux",filtre: m => !/bourgmestre|[eé]chevin/i.test(m.detail_fonction) },
+  ];
+
+  return (
+    <div style={{marginTop:12, border:`1px solid ${C.border}`, borderRadius:8, overflow:"hidden"}}>
+      <div style={{background:C.grisClair, padding:"8px 14px", display:"flex", justifyContent:"space-between", alignItems:"center"}}>
+        <span style={{fontSize:13, fontWeight:700, color:C.bleu}}>
+          Présents au conseil — {nbPresents}/{conseil.length}
+          {nbAbsents > 0 && <span style={{marginLeft:8, background:C.jauneClair, color:C.jaune, padding:"1px 8px", borderRadius:10, fontSize:11}}>{nbAbsents} absent{nbAbsents>1?"s":""} excusé{nbAbsents>1?"s":""}</span>}
+        </span>
+        {nbAbsents > 0 && (
+          <button onClick={()=>onChange({})} style={{background:"none", border:"none", fontSize:11, color:C.gris, cursor:"pointer", textDecoration:"underline"}}>
+            Tous présents
+          </button>
+        )}
+      </div>
+      <div style={{padding:"10px 14px", display:"flex", flexDirection:"column", gap:10}}>
+        {groupes.map(({label, filtre}) => {
+          const membres = conseil.map((m,i)=>({m,i})).filter(({m})=>filtre(m));
+          if (membres.length === 0) return null;
+          return (
+            <div key={label}>
+              <div style={{fontSize:10, fontWeight:700, color:C.gris, textTransform:"uppercase", letterSpacing:".5px", marginBottom:4}}>{label}</div>
+              <div style={{display:"flex", flexWrap:"wrap", gap:"4px 16px"}}>
+                {membres.map(({m, i}) => {
+                  const present = presences[i] !== false;
+                  return (
+                    <label key={i} style={{display:"flex", alignItems:"center", gap:5, cursor:"pointer", fontSize:12,
+                      color: present ? C.bleu : C.gris, opacity: present ? 1 : .55}}>
+                      <input type="checkbox" checked={present} onChange={()=>toggle(i)}
+                        style={{accentColor: C.bleu, width:13, height:13, cursor:"pointer"}}/>
+                      {nomM(m)}
+                    </label>
+                  );
+                })}
+              </div>
+            </div>
+          );
+        })}
       </div>
     </div>
   );
@@ -1007,13 +1093,14 @@ export default function App() {
   const [params, setParams] = useState({
     commune:"", ins:"", cp:"", province:"", arrondissement:"", population:null,
     nomCourt:"", adresse:"", emailGeneral:"", telephone:"",
-    typeReglement:"taxe", sousTypeRedevance:"autorisation", categorie:"", objet:"",
+    typeReglement:"taxe", sousTypeRedevance:"autorisation", categorie:"", objet:"", dateSeance:"",
     periodeDebut: String(new Date().getFullYear()+1),
     periodeFin:   String(new Date().getFullYear()+6),
     redevable:"", tarif:"", exonerations:"", infoCompl:"",
   });
   const [mandataires, setMandataires] = useState([]);
   const [mandLoading, setMandLoading] = useState(false);
+  const [presences, setPresences] = useState({});
   const [texteGenere, setTexteGenere] = useState("");
   const [texteVerif, setTexteVerif] = useState("");
   const [resultatsVerif, setResultatsVerif] = useState(null);
@@ -1028,12 +1115,12 @@ export default function App() {
     setParams(p=>({...p, commune:c.nom, ins:c.ins||"", cp:c.cp||"",
       province:"", arrondissement:"", nomCourt:c.nom_court||"",
       adresse:c.adresse||"", emailGeneral:c.email_general||"", telephone:c.telephone||"", population:null}));
-    setMandataires([]);
+    setMandataires([]); setPresences({});
     if (!c.ins) return;
     setMandLoading(true);
     try {
       const m = await getMandataires(c.ins);
-      setMandataires(m);
+      setMandataires(m); setPresences({});
       const first = m[0];
       if (first) setParams(p=>({...p, population:first.population||null, province:first.province||"", arrondissement:first.arrondissement||""}));
     } catch {}
@@ -1048,7 +1135,7 @@ export default function App() {
       const res = await fetch(`${WORKER_URL}/openai/v1/chat/completions`, {
         method:"POST", headers:{"Content-Type":"application/json"},
         body: JSON.stringify({model:"gpt-4o", max_tokens:6000, stream:true,
-          messages:buildMessages(params,refs,mandataires)}),
+          messages:buildMessages(params,refs,mandataires,presences)}),
       });
       if (!res.ok) { const e=await res.text(); throw new Error(`API ${res.status} : ${e}`); }
       const reader=res.body.getReader(), dec=new TextDecoder();
@@ -1129,6 +1216,7 @@ export default function App() {
                     </div>
                   )}
                   <CarteMandataires data={mandataires} loading={mandLoading} commune={params.commune}/>
+                  <PanelPresences mandataires={mandataires} presences={presences} onChange={setPresences}/>
                 </div>
 
                 <div style={{gridColumn:"1/-1"}}>
@@ -1156,6 +1244,12 @@ export default function App() {
                     </select>
                   </div>
                 )}
+                <div style={{display:"flex",gap:8}}>
+                  <div style={{flex:1}}>
+                    <label style={lS}>Date de séance</label>
+                    <input type="date" style={iS} value={params.dateSeance} onChange={e=>upd("dateSeance",e.target.value)}/>
+                  </div>
+                </div>
                 <div style={{display:"flex",gap:8}}>
                   <div style={{flex:1}}><label style={lS}>Exercice début</label><input style={iS} value={params.periodeDebut} onChange={e=>upd("periodeDebut",e.target.value)}/></div>
                   <div style={{flex:1}}><label style={lS}>Exercice fin</label><input style={iS} value={params.periodeFin} onChange={e=>upd("periodeFin",e.target.value)}/></div>
