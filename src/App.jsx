@@ -461,7 +461,7 @@ const REGLES = [
     label:"Visa art. 162 Constitution (autonomie communale)",
     explication:"Ce visa est absent du règlement. Les tutelles provinciales wallonnes l'exigent systématiquement en complément de l'art. 170 §4.",
     correction:"Compléter le visa constitutionnel existant :\n« Vu la Constitution, notamment les articles 41, 162 et 170 §4 ; »\n(remplacer toute formulation qui ne cite que 170 §4 sans le 162)",
-    test: t => /art\.?\s*162\b|article\s+162\b/i.test(t),
+    test: t => /art\.?\s*162\b|articles?\s[^;.]{0,30}\b162\b/i.test(t),
   },
   {
     id:"r-const-41", gravite:"avertissement",
@@ -568,7 +568,9 @@ const REGLES = [
     correction:"Corriger le délai de réclamation :\n« …dans un délai de 6 mois à dater de l'envoi de la formule d'imposition… »\n\u26a0\ufe0f Ce délai est d'ordre public : il ne peut PAS être inférieur à 6 mois.",
     test: function(t) {
       if (!/r[eé]clamation/i.test(t)) return null;
-      return /6\s*mois|six\s*mois/i.test(t) && !/[123]\s*mois|\b30\s*jours|\b15\s*jours/i.test(t);
+      const idx = t.search(/r[eé]clamation/i);
+      const ctx = t.slice(Math.max(0, idx - 100), idx + 500);
+      return /6\s*mois|six\s*mois/i.test(ctx);
     },
   },
   {
