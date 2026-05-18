@@ -342,6 +342,14 @@ function trouverRefs(objet, type, categorie, source, sousCat) {
     .filter(r => r._score>0 || !categorie)
     .sort((a,b)=>b._score-a._score).slice(0,4);
 }
+// ─── PROFIL COMMUNE ───────────────────────────────────────────────────────────
+const PROFIL_KEY = "vb_profil_commune";
+function chargerProfil() {
+  try { return JSON.parse(localStorage.getItem(PROFIL_KEY) || "{}"); }
+  catch { return {}; }
+}
+function sauverProfil(p) { localStorage.setItem(PROFIL_KEY, JSON.stringify(p)); }
+
 // ─── BIBLIOTHÈQUE ─────────────────────────────────────────────────────────────
 const BIBLIO_KEY = "vb_biblio_locale";
 
@@ -1327,6 +1335,90 @@ function OngletBibliotheque({ biblio, setBiblio }) {
   );
 }
 
+// ─── PANEL PROFIL COMMUNE ─────────────────────────────────────────────────────
+function PanelProfil({ profil, onSave, onClose }) {
+  const [p, setP] = useState({
+    typeCommune:"Commune", nomCommune:"", province:"", arrondissement:"",
+    nomDG:"", titreDG:"Directeur général", logo:null,
+    ...profil,
+  });
+  const upd = (k, v) => setP(prev => ({ ...prev, [k]: v }));
+
+  const handleLogo = e => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    if (file.size > 300_000) { alert("Image trop lourde (max 300 ko)."); return; }
+    const reader = new FileReader();
+    reader.onload = ev => upd("logo", ev.target.result);
+    reader.readAsDataURL(file);
+  };
+
+  return (
+    <div style={{position:"fixed",inset:0,background:"rgba(0,0,0,.5)",zIndex:1000,display:"flex",alignItems:"center",justifyContent:"center"}}>
+      <div style={{background:C.blanc,borderRadius:12,padding:28,width:"min(520px,92vw)",maxHeight:"90vh",overflowY:"auto",boxShadow:"0 8px 40px rgba(0,0,0,.22)"}}>
+        <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:20}}>
+          <h3 style={{margin:0,color:C.bleu,fontSize:16}}>⚙️ Profil de la commune</h3>
+          <button onClick={onClose} style={{background:"none",border:"none",fontSize:22,cursor:"pointer",color:C.gris,lineHeight:1}}>×</button>
+        </div>
+
+        <div style={{display:"grid",gap:12}}>
+          <div style={{display:"grid",gridTemplateColumns:"1fr 2fr",gap:12}}>
+            <div>
+              <label style={lS}>Type</label>
+              <select style={iS} value={p.typeCommune} onChange={e=>upd("typeCommune",e.target.value)}>
+                <option>Commune</option><option>Ville</option><option>CPAS</option>
+              </select>
+            </div>
+            <div>
+              <label style={lS}>Nom</label>
+              <input style={iS} value={p.nomCommune} onChange={e=>upd("nomCommune",e.target.value)} placeholder="ex. : La Bruyère"/>
+            </div>
+          </div>
+          <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:12}}>
+            <div>
+              <label style={lS}>Province</label>
+              <input style={iS} value={p.province} onChange={e=>upd("province",e.target.value)} placeholder="ex. : Namur"/>
+            </div>
+            <div>
+              <label style={lS}>Arrondissement</label>
+              <input style={iS} value={p.arrondissement} onChange={e=>upd("arrondissement",e.target.value)} placeholder="ex. : Namur"/>
+            </div>
+          </div>
+          <div style={{display:"grid",gridTemplateColumns:"2fr 1fr",gap:12}}>
+            <div>
+              <label style={lS}>Nom du Directeur général</label>
+              <input style={iS} value={p.nomDG} onChange={e=>upd("nomDG",e.target.value)} placeholder="ex. : Fernand Flabat"/>
+            </div>
+            <div>
+              <label style={lS}>Titre</label>
+              <input style={iS} value={p.titreDG} onChange={e=>upd("titreDG",e.target.value)} placeholder="Directeur général"/>
+            </div>
+          </div>
+          <div>
+            <label style={lS}>Logo (PNG/JPG, max 300 ko)</label>
+            {p.logo && <img src={p.logo} alt="logo" style={{height:50,marginBottom:6,display:"block",borderRadius:4,border:`1px solid ${C.border}`}}/>}
+            <div style={{display:"flex",alignItems:"center",gap:10}}>
+              <input type="file" accept="image/png,image/jpeg,image/gif" onChange={handleLogo} style={{fontSize:12}}/>
+              {p.logo && <button onClick={()=>upd("logo",null)} style={{background:"none",border:"none",color:C.rouge,fontSize:12,cursor:"pointer",textDecoration:"underline"}}>Supprimer</button>}
+            </div>
+          </div>
+          <div style={{marginTop:4,padding:"10px 14px",background:C.bleuLight,borderRadius:6,fontSize:12,color:C.bleu}}>
+            Ces informations sont sauvegardées dans votre navigateur et pré-remplissent automatiquement l'en-tête de chaque export Word.
+          </div>
+        </div>
+
+        <div style={{display:"flex",gap:10,marginTop:20,justifyContent:"flex-end"}}>
+          <button onClick={onClose} style={{background:C.grisClair,color:C.gris,border:`1px solid ${C.border}`,borderRadius:7,padding:"9px 18px",fontSize:13,cursor:"pointer"}}>Annuler</button>
+          <button onClick={()=>{ sauverProfil(p); onSave(p); onClose(); }}
+            style={{background:C.bleu,color:C.blanc,border:"none",borderRadius:7,padding:"9px 22px",fontWeight:700,fontSize:13,cursor:"pointer"}}>
+            💾 Enregistrer
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 // ─── COMPOSANT PRINCIPAL ──────────────────────────────────────────────────────
 export default function App() {
   const [onglet, setOnglet] = useState("generer");
@@ -1348,6 +1440,8 @@ export default function App() {
   const [loading, setLoading] = useState(false);
   const [erreur, setErreur] = useState("");
   const [etape, setEtape] = useState("formulaire");
+  const [profil, setProfil] = useState(()=>chargerProfil());
+  const [showProfil, setShowProfil] = useState(false);
   const streamRef = useRef("");
 
   const upd = (k,v) => setParams(p=>({...p,[k]:v}));
@@ -1399,6 +1493,15 @@ export default function App() {
     finally{ setLoading(false); }
   }, [params, mandataires]);
 
+  const handleExportDocx = async () => {
+    try {
+      const { exportDocx } = await import("./exportDocx.js");
+      await exportDocx({ texteGenere, params, profil });
+    } catch (e) {
+      setErreur(`Export Word impossible : ${e.message}`);
+    }
+  };
+
   const lancerVerif = () => {
     if (!texteVerif.trim()) { setErreur("Collez un texte à analyser."); return; }
     setErreur(""); setResultatsVerif(verifier(texteVerif));
@@ -1420,12 +1523,18 @@ export default function App() {
   return (
     <div style={{fontFamily:"'Segoe UI',Arial,sans-serif",background:C.grisClair,minHeight:"100vh"}}>
 
+      {showProfil && <PanelProfil profil={profil} onSave={setProfil} onClose={()=>setShowProfil(false)}/>}
+
       <div style={{background:C.bleu,color:C.blanc,padding:"14px 24px",display:"flex",alignItems:"center",gap:12}}>
         <div style={{background:C.orange,borderRadius:8,width:36,height:36,display:"flex",alignItems:"center",justifyContent:"center",fontWeight:700,fontSize:18}}>VB</div>
-        <div>
+        <div style={{flex:1}}>
           <div style={{fontWeight:700,fontSize:16}}>Assistant Règlements — OrangeConnect</div>
           <div style={{fontSize:12,opacity:.75}}>Taxes et redevances wallonnes · v6 · {biblio.length} règlements</div>
         </div>
+        <button onClick={()=>setShowProfil(true)}
+          style={{background:"rgba(255,255,255,.15)",color:C.blanc,border:"1px solid rgba(255,255,255,.3)",borderRadius:7,padding:"7px 14px",fontSize:12,cursor:"pointer",fontWeight:600,whiteSpace:"nowrap"}}>
+          ⚙️ {profil.nomCommune || "Profil commune"}
+        </button>
       </div>
 
       <div style={{background:C.blanc,borderBottom:`2px solid ${C.border}`,display:"flex",padding:"0 24px"}}>
@@ -1554,6 +1663,7 @@ export default function App() {
                   <h3 style={{color:C.bleu,margin:0,fontSize:16}}>📄 Règlement généré</h3>
                   <div style={{display:"flex",gap:8}}>
                     {etape==="resultat"&&<button onClick={()=>{setTexteVerif(texteGenere);setOnglet("verifier");setResultatsVerif(null);}} style={{background:C.bleuLight,color:C.bleu,border:`1px solid ${C.bleu}`,borderRadius:6,padding:"6px 14px",fontSize:12,cursor:"pointer",fontWeight:600}}>✅ Vérifier</button>}
+                    {etape==="resultat"&&<button onClick={handleExportDocx} style={{background:C.vertClair,color:C.vert,border:`1px solid ${C.vert}`,borderRadius:6,padding:"6px 14px",fontSize:12,cursor:"pointer",fontWeight:600}}>⬇ Word</button>}
                     <button onClick={()=>navigator.clipboard.writeText(texteGenere)} style={{background:C.grisClair,color:C.gris,border:`1px solid ${C.border}`,borderRadius:6,padding:"6px 14px",fontSize:12,cursor:"pointer"}}>📋 Copier</button>
                   </div>
                 </div>
