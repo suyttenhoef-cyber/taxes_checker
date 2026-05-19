@@ -15,7 +15,10 @@ async function uploadDocument(docxBlob, fileName) {
   }
 
   const data = await res.json();
-  return data.FileId;
+  // eSignFlow retourne le FileId comme chaîne brute ou comme objet
+  const fileId = typeof data === 'string' ? data : (data.FileId ?? data.fileId ?? data.Id ?? data.id);
+  if (!fileId) throw new Error(`Upload eSignFlow : FileId introuvable — réponse: ${JSON.stringify(data)}`);
+  return fileId;
 }
 
 async function creerDossier({ fileId, fileName, params, profil }) {
@@ -29,6 +32,7 @@ async function creerDossier({ fileId, fileName, params, profil }) {
   validUntil.setDate(validUntil.getDate() + 30);
 
   const payload = {
+    DossiersoortId: 3324,
     Documents: [
       {
         FileId:       fileId,
@@ -38,20 +42,7 @@ async function creerDossier({ fileId, fileName, params, profil }) {
         InternalNote: `Généré via Tax Checker (OrangeConnect — Vanden Broele). Objet : ${objet}`,
         ExternalNote: '',
         LanguageId:   2,
-        DocumentType: 0,
-        RequiresEid:  true,
-        SendByPost:   false,
-        ValidUntil:   validUntil.toISOString(),
-        ReminderDays: 3,
         IsDraft:      false,
-        Signers: [
-          { UserEmail: 'sebastien.uyttenhoef@vandenbroele.be', Order: 1 },
-          { UserEmail: 'jullie.lesuisse@vandenbroele.be',      Order: 2 },
-        ],
-        Approvers:      [],
-        Receivers:      [],
-        Attachments:    [],
-        DestinationIds: [],
       },
     ],
   };
@@ -63,8 +54,9 @@ async function creerDossier({ fileId, fileName, params, profil }) {
   });
 
   if (!res.ok) {
-    const err = await res.json().catch(() => ({}));
-    throw new Error(err.message || `Création dossier eSignFlow erreur ${res.status}`);
+    const raw = await res.text().catch(() => '');
+    const err = (() => { try { return JSON.parse(raw); } catch { return {}; } })();
+    throw new Error(err.Message || err.message || `Création dossier eSignFlow erreur ${res.status}: ${raw}`);
   }
 
   return await res.json();

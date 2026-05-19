@@ -12,7 +12,10 @@ function corsHeaders(origin) {
 async function handleESignFlow(request, env, url, origin) {
   const cors = corsHeaders(origin);
   const path = url.pathname.replace('/esignflow', '');
-  const auth = { 'Authorization': `Bearer ${env.ESIGNFLOW_API_KEY}` };
+  const auth = {
+    'X-eSignFlow-API-Key':        env.ESIGNFLOW_API_KEY,
+    'X-eSignFlow-Identity-Email': env.ESIGNFLOW_SIGNER1_EMAIL,
+  };
   const base = env.ESIGNFLOW_BASE_URL;
 
   if (path === '/upload' && request.method === 'POST') {
@@ -25,7 +28,8 @@ async function handleESignFlow(request, env, url, origin) {
       headers: auth,
       body:    outForm,
     });
-    return new Response(res.body, {
+    const body = await res.text();
+    return new Response(body, {
       status:  res.status,
       headers: { 'Content-Type': 'application/json', ...cors },
     });
@@ -33,7 +37,6 @@ async function handleESignFlow(request, env, url, origin) {
 
   if (path === '/create' && request.method === 'POST') {
     const body = await request.json();
-    // Inject signers from env so emails never travel through the browser
     if (body.Documents?.[0]) {
       body.Documents[0].Signers = [
         { UserEmail: env.ESIGNFLOW_SIGNER1_EMAIL, Order: 1 },
@@ -45,7 +48,8 @@ async function handleESignFlow(request, env, url, origin) {
       headers: { ...auth, 'Content-Type': 'application/json' },
       body:    JSON.stringify(body),
     });
-    return new Response(res.body, {
+    const resBody = await res.text();
+    return new Response(resBody, {
       status:  res.status,
       headers: { 'Content-Type': 'application/json', ...cors },
     });
@@ -104,7 +108,6 @@ export default {
         headers,
         body: request.body,
       }));
-
     } else if (url.pathname.startsWith('/github/')) {
       const target = 'https://api.github.com' + url.pathname.replace('/github', '') + url.search;
       const headers = new Headers();
