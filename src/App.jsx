@@ -1,5 +1,6 @@
 import INDEX from "./index_valide.json";
 import { useState, useRef, useCallback, useEffect } from "react";
+import SignaturePanel from "./SignaturePanel.jsx";
 
 const C = {
   orange:"#E87722", orangeLight:"#FFF4EC",
@@ -1453,6 +1454,8 @@ export default function App() {
   const [texteLibre, setTexteLibre] = useState("");
   const [qualifBusy, setQualifBusy] = useState(false);
   const [qualifMsg, setQualifMsg] = useState(null); // {ok, texte, explication}
+  const [docxBlob, setDocxBlob]   = useState(null);
+  const [signatureState, setSignatureState] = useState({ etape:'pret', dossierId:null, pdfBlob:null });
   const streamRef = useRef("");
 
   const upd = (k,v) => setParams(p=>({...p,[k]:v}));
@@ -1587,10 +1590,45 @@ ${catList}`;
   const handleExportDocx = async () => {
     try {
       const { exportDocx } = await import("./exportDocx.js");
-      await exportDocx({ texteGenere, params, profil });
+      const blob = await exportDocx({ texteGenere, params, profil });
+      setDocxBlob(blob);
     } catch (e) {
       setErreur(`Export Word impossible : ${e.message}`);
     }
+  };
+
+  const handleSigne = ({ blob, dossierId }) => {
+    setSignatureState({ etape:'signe', dossierId, pdfBlob:blob });
+    const entry = {
+      id: `local-${Date.now()}`,
+      commune: params.commune || '',
+      type: params.typeReglement,
+      categorie: params.categorie,
+      sousCat: params.sousCat || '',
+      annee: Number(params.periodeDebut) || new Date().getFullYear(),
+      periode: `${params.periodeDebut}–${params.periodeFin}`,
+      objet: params.objet,
+      mots_cles: [],
+      visas: [],
+      tarifs: params.tarif,
+      exonerations: params.exonerations ? [params.exonerations] : [],
+      points_forts: [],
+      extrait: texteGenere.slice(0, 500),
+      source: { numero_deliberation:'', date_seance: params.dateSeance || '' },
+      qualite: 'reference',
+      points_forts_valides: true,
+      _local: true,
+      signature: {
+        statut: 'signe',
+        esignflow_dossier_id: dossierId,
+        date_signature: new Date().toISOString(),
+      },
+    };
+    setBiblio(prev => {
+      const next = [entry, ...prev];
+      sauvegarderLocale(next.filter(x => x._local));
+      return next;
+    });
   };
 
   const lancerVerif = () => {
@@ -1619,8 +1657,8 @@ ${catList}`;
       <div style={{background:C.bleu,color:C.blanc,padding:"14px 24px",display:"flex",alignItems:"center",gap:12}}>
         <div style={{background:C.orange,borderRadius:8,width:36,height:36,display:"flex",alignItems:"center",justifyContent:"center",fontWeight:700,fontSize:18}}>VB</div>
         <div style={{flex:1}}>
-          <div style={{fontWeight:700,fontSize:16}}>Assistant Règlements — OrangeConnect</div>
-          <div style={{fontSize:12,opacity:.75}}>Taxes et redevances wallonnes · v6 · {biblio.length} règlements</div>
+          <div style={{fontWeight:700,fontSize:16}}>Assistant règlements — Taxes & redevances</div>
+          <div style={{fontSize:12,opacity:.75}}>Outil de génération IAConnect</div>
         </div>
         <button onClick={()=>setShowProfil(true)}
           style={{background:"rgba(255,255,255,.15)",color:C.blanc,border:"1px solid rgba(255,255,255,.3)",borderRadius:7,padding:"7px 14px",fontSize:12,cursor:"pointer",fontWeight:600,whiteSpace:"nowrap"}}>
@@ -1629,10 +1667,18 @@ ${catList}`;
       </div>
 
       <div style={{background:C.blanc,borderBottom:`2px solid ${C.border}`,display:"flex",padding:"0 24px"}}>
-        {[["generer","✏️ Rédiger"],["verifier","✅ Vérifier"],["bibliotheque","📚 Bibliothèque"]].map(([k,l])=>(
-          <button key={k} onClick={()=>{setOnglet(k);setErreur("");}}
-            style={{padding:"12px 20px",border:"none",background:"none",cursor:"pointer",fontWeight:600,fontSize:14,
-              color:onglet===k?C.orange:C.gris,borderBottom:onglet===k?`3px solid ${C.orange}`:"3px solid transparent",marginBottom:-2}}>
+        {[
+          ["generer","✏️ Rédiger", false],
+          ["verifier","✅ Vérifier", false],
+          ["signer","✍️ Signer", !texteGenere],
+          ["bibliotheque","📚 Bibliothèque", false],
+        ].map(([k,l,disabled])=>(
+          <button key={k} onClick={()=>{ if(!disabled){setOnglet(k);setErreur("");} }}
+            style={{padding:"12px 20px",border:"none",background:"none",
+              cursor:disabled?"not-allowed":"pointer",fontWeight:600,fontSize:14,
+              color:disabled?C.border:onglet===k?C.orange:C.gris,
+              borderBottom:onglet===k?`3px solid ${C.orange}`:"3px solid transparent",marginBottom:-2,
+              opacity:disabled?0.4:1}}>
             {l}
           </button>
         ))}
@@ -1853,6 +1899,16 @@ ${catList}`;
               </>
             )}
           </>
+        )}
+
+        {/* ══ ONGLET SIGNER ══ */}
+        {onglet==="signer"&&(
+          <SignaturePanel
+            docxBlob={docxBlob}
+            params={params}
+            profil={profil}
+            onSigne={handleSigne}
+          />
         )}
 
         {/* ══ ONGLET BIBLIOTHÈQUE ══ */}
