@@ -14,6 +14,7 @@ import PanelPresences      from './components/PanelPresences.jsx';
 import RegleResultat       from './components/RegleResultat.jsx';
 import FormulaireEntree    from './components/FormulaireEntree.jsx';
 import OngletBibliotheque  from './components/OngletBibliotheque.jsx';
+import OngletDocuments     from './components/OngletDocuments.jsx';
 import PanelProfil         from './components/PanelProfil.jsx';
 import SignaturePanel      from './components/SignaturePanel.jsx';
 
@@ -177,7 +178,8 @@ export default function App() {
   ).length;
 
   const ONGLETS = [
-    ['generer',     '✏️ Rédiger',     false],
+    ['generer',     '✏️ Règlements',  false],
+    ['documents',   '📋 Séance',      false],
     ['verifier',    '✅ Vérifier',    false],
     ['signer',      '✍️ Signer',      !texteGenere],
     ['bibliotheque','📚 Bibliothèque',false],
@@ -398,6 +400,11 @@ export default function App() {
               </div>
             )}
           </>
+        )}
+
+        {/* ═══ SÉANCE ═══ */}
+        {onglet === 'documents' && (
+          <OngletDocuments profil={profil} />
         )}
 
         {/* ═══ VÉRIFIER ═══ */}
