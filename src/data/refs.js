@@ -1,0 +1,37 @@
+export const REFS = [
+  {
+    id:"ref-redevance-aiseau-2019", commune:"Aiseau-Presles",
+    titre:"Règlement-redevance pour la délivrance de documents administratifs",
+    type:"redevance", annee:2019,
+    categorie:"actes-administratifs",
+    mots_cles:["documents","administratifs","actes","délivrance","renseignements"],
+    qualite:"bonne", points_forts_valides:true,
+    points_forts:[
+      "Visa art. 162 al. 2 et 170 §4 Constitution",
+      "Visa CDLD L1122-30 et L1124-40",
+      "Visa Charte européenne de l'autonomie locale art. 9.1",
+      "Considérant de justification des coûts de traitement directs",
+      "Délai 15 jours au débiteur avant commandement (loi 20/12/2002 art. 6 §3)",
+      "Avis préalable Directeur financier (art. L1124-40 §1er, 4° CDLD)",
+      "Clause entrée en vigueur conditionnée à la tutelle et publication L1133-1/2",
+    ],
+    extrait:`Le Conseil Communal, réuni en séance publique,\n\nVu la Constitution, notamment les articles 162 alinéa 2, 2° et 170 §4 ;\nVu la première partie du CDLD, notamment les articles L1122-30 et L1124-40 ;\n[…]\nConsidérant que les recherches entraînent des coûts de traitement répercutés sur les bénéficiaires ;\n[…]`,
+  },
+  {
+    id:"ref-taxe-gembloux-2025", commune:"Gembloux",
+    titre:"Règlement-taxe sur les agences de paris et courses de chevaux",
+    type:"taxe", annee:2025,
+    categorie:"commerce-economie",
+    mots_cles:["paris","courses","chevaux","agences","CIR","commerce"],
+    qualite:"bonne", points_forts_valides:true,
+    points_forts:[
+      "Visa art. 41, 162 et 170 §4 Constitution",
+      "Visa CDLD L1122-30, L3321-1 à L3321-12",
+      "Visa circulaire du 30 mai 2024",
+      "Article Taxation d'office : L3321-6 CDLD, majoration 20%",
+      "Article RGPD : responsable traitement, durée 30 ans",
+      "Article Tutelle séparé : L3131-1 et suivants",
+    ],
+    extrait:`Le Conseil communal,\n\nVu la Constitution et notamment les articles 41, 162 et 170 §4 ;\nVu le CDLD, notamment L1122-30 et L3321-1 à L3321-12 ;\n[…]`,
+  },
+];

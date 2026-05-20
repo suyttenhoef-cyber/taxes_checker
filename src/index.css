@@ -1,0 +1,49 @@
+@import "tailwindcss";
+
+@theme {
+  --color-vb-orange:       #E87722;
+  --color-vb-orange-light: #FFF4EC;
+  --color-vb-bleu:         #1A3A5C;
+  --color-vb-bleu-light:   #EEF3F8;
+  --color-vb-vert:         #15803D;
+  --color-vb-vert-clair:   #F0FDF4;
+  --color-vb-rouge:        #DC2626;
+  --color-vb-rouge-clair:  #FEF2F2;
+  --color-vb-jaune:        #D97706;
+  --color-vb-jaune-clair:  #FFFBEB;
+  --color-vb-gris:         #6B7280;
+  --color-vb-gris-clair:   #F3F4F6;
+  --color-vb-border:       #E5E7EB;
+  --font-vb: 'Segoe UI', Arial, sans-serif;
+}
+
+@layer base {
+  body {
+    font-family: var(--font-vb);
+  }
+}
+
+@layer components {
+  .vb-input {
+    @apply w-full px-3 py-2 border border-vb-border rounded-md text-[13px] text-vb-bleu outline-none bg-gray-50 box-border;
+    font-family: var(--font-vb);
+  }
+  .vb-input:focus {
+    @apply border-vb-bleu;
+  }
+  .vb-label {
+    @apply block font-semibold text-[12px] text-vb-bleu mb-[5px];
+  }
+  .vb-btn {
+    @apply border-none rounded-lg font-bold text-[13px] cursor-pointer px-5 py-[10px] transition-opacity;
+  }
+  .vb-btn:disabled {
+    @apply opacity-60 cursor-not-allowed;
+  }
+  .vb-card {
+    @apply bg-white rounded-xl border border-vb-border p-6;
+  }
+  .vb-badge {
+    @apply px-[9px] py-[2px] rounded-full text-[11px] font-bold;
+  }
+}
