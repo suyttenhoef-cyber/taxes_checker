@@ -21,15 +21,16 @@ async function uploadDocument(docxBlob, fileName) {
   return fileId;
 }
 
-async function creerDossier({ fileId, fileName, params, profil }) {
+async function creerDossier({ fileId, fileName, params, profil, circuit }) {
   const commune = profil?.nomCommune || 'commune';
   const annee   = params?.periodeDebut
     ? new Date(params.periodeDebut + '-01-01').getFullYear()
     : new Date().getFullYear();
   const objet   = params?.objet || 'règlement';
 
-  const validUntil = new Date();
-  validUntil.setDate(validUntil.getDate() + 30);
+  const signers = circuit?.signataires?.length > 0
+    ? circuit.signataires.map(s => ({ UserEmail: s.email, Order: s.ordre }))
+    : null;
 
   const payload = {
     DossiersoortId: 3324,
@@ -43,6 +44,7 @@ async function creerDossier({ fileId, fileName, params, profil }) {
         ExternalNote: '',
         LanguageId:   2,
         IsDraft:      false,
+        ...(signers ? { Signers: signers } : {}),
       },
     ],
   };
@@ -66,14 +68,14 @@ async function creerDossier({ fileId, fileName, params, profil }) {
  * Upload le DOCX et crée le dossier eSignFlow.
  * Les emails des signataires sont injectés par le Worker (secrets).
  */
-export async function envoyerPourSignature({ docxBlob, params, profil }) {
+export async function envoyerPourSignature({ docxBlob, params, profil, circuit }) {
   const commune  = profil?.nomCommune || 'commune';
   const annee    = params?.periodeDebut || new Date().getFullYear();
   const fileName = `reglement_taxe_${commune}_${annee}.docx`
     .toLowerCase().replace(/\s+/g, '_').replace(/[^a-z0-9_.-]/g, '');
 
   const fileId  = await uploadDocument(docxBlob, fileName);
-  const dossier = await creerDossier({ fileId, fileName, params, profil });
+  const dossier = await creerDossier({ fileId, fileName, params, profil, circuit });
 
   return {
     dossierId: dossier.Id || dossier.Documents?.[0]?.Id,

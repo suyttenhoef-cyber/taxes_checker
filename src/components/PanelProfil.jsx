@@ -1,12 +1,15 @@
 import { useState } from 'react';
 import { sauverProfil } from '../services/storageService.js';
+import CircuitBuilder from './CircuitBuilder.jsx';
 
 export default function PanelProfil({ profil, onSave, onClose }) {
   const [p, setP] = useState({
     typeCommune: 'Commune', nomCommune: '', province: '', arrondissement: '',
     nomDG: '', titreDG: 'Directeur général', logo: null,
+    circuits: [],
     ...profil,
   });
+  const [circuitsOpen, setCircuitsOpen] = useState(false);
   const upd = (k, v) => setP(prev => ({ ...prev, [k]: v }));
 
   const handleLogo = e => {
@@ -75,6 +78,28 @@ export default function PanelProfil({ profil, onSave, onClose }) {
 
           <div className="mt-1 px-3.5 py-2.5 bg-vb-bleu-light rounded-md text-[12px] text-vb-bleu">
             Ces informations sont sauvegardées dans votre navigateur et pré-remplissent automatiquement l'en-tête de chaque export Word.
+          </div>
+
+          <div className="mt-4 border-t border-vb-border pt-4">
+            <button
+              onClick={() => setCircuitsOpen(o => !o)}
+              className="flex items-center gap-2 w-full text-left bg-transparent border-none cursor-pointer p-0"
+            >
+              <span className="font-bold text-[13px] text-vb-bleu flex-1">✍️ Circuits de signature</span>
+              <span className="text-vb-gris text-[12px]">{p.circuits?.length || 0} circuit(s)</span>
+              <span className="text-vb-gris text-[14px]">{circuitsOpen ? '▲' : '▼'}</span>
+            </button>
+            {circuitsOpen && (
+              <div className="mt-3">
+                <p className="text-[12px] text-vb-gris mb-3">
+                  Définissez les circuits de signature réutilisables. Les signataires doivent avoir un compte <strong>@vandenbroele.be</strong>.
+                </p>
+                <CircuitBuilder
+                  circuits={p.circuits || []}
+                  onChange={circuits => upd('circuits', circuits)}
+                />
+              </div>
+            )}
           </div>
         </div>
 

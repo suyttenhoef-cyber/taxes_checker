@@ -1,7 +1,7 @@
 const ALLOWED_ORIGIN = 'https://suyttenhoef-cyber.github.io';
 
 function corsHeaders(origin) {
-  const allowed = origin === ALLOWED_ORIGIN || origin === 'http://localhost:5173';
+  const allowed = origin === ALLOWED_ORIGIN || origin.startsWith('http://localhost:');
   return {
     'Access-Control-Allow-Origin': allowed ? origin : '',
     'Access-Control-Allow-Methods': 'GET, POST, OPTIONS',
@@ -38,10 +38,23 @@ async function handleESignFlow(request, env, url, origin) {
   if (path === '/create' && request.method === 'POST') {
     const body = await request.json();
     if (body.Documents?.[0]) {
-      body.Documents[0].Signers = [
-        { UserEmail: env.ESIGNFLOW_SIGNER1_EMAIL, Order: 1 },
-        { UserEmail: env.ESIGNFLOW_SIGNER2_EMAIL, Order: 2 },
-      ];
+      const payloadSigners = body.Documents[0].Signers;
+      if (Array.isArray(payloadSigners) && payloadSigners.length > 0) {
+        const invalid = payloadSigners.find(s =>
+          typeof s.UserEmail !== 'string' || !s.UserEmail.toLowerCase().endsWith('@vandenbroele.be')
+        );
+        if (invalid) {
+          return new Response(
+            JSON.stringify({ message: 'Signataires invalides : domaine @vandenbroele.be requis.' }),
+            { status: 400, headers: { 'Content-Type': 'application/json', ...cors } }
+          );
+        }
+      } else {
+        body.Documents[0].Signers = [
+          { UserEmail: env.ESIGNFLOW_SIGNER1_EMAIL, Order: 1 },
+          { UserEmail: env.ESIGNFLOW_SIGNER2_EMAIL, Order: 2 },
+        ];
+      }
     }
     const res = await fetch(`${base}/documents/create`, {
       method:  'POST',
