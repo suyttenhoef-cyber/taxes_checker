@@ -35,21 +35,51 @@ async function handleESignFlow(request, env, url, origin) {
     });
   }
 
+  if (path === '/dossiersoorts' && request.method === 'GET') {
+    const res  = await fetch(`${base}/dossiersoorts`, { headers: auth });
+    const body = await res.text();
+    return new Response(body, {
+      status: res.status,
+      headers: { 'Content-Type': 'application/json', ...cors },
+    });
+  }
+
+  if (path === '/dossiers' && request.method === 'GET') {
+    const res  = await fetch(`${base}/documents`, { headers: auth });
+    const body = await res.text();
+    return new Response(body, {
+      status: res.status,
+      headers: { 'Content-Type': 'application/json', ...cors },
+    });
+  }
+
   if (path === '/create' && request.method === 'POST') {
     const body = await request.json();
     if (body.Documents?.[0]) {
-      const payloadSigners = body.Documents[0].Signers;
-      if (Array.isArray(payloadSigners) && payloadSigners.length > 0) {
-        const invalid = payloadSigners.find(s =>
+      const payloadSigners    = body.Documents[0].Signers;
+      const payloadApprovers  = body.Documents[0].Approvers;
+
+      const validateEmails = (list, label) => {
+        const invalid = list?.find(s =>
           typeof s.UserEmail !== 'string' || !s.UserEmail.toLowerCase().endsWith('@vandenbroele.be')
         );
-        if (invalid) {
-          return new Response(
-            JSON.stringify({ message: 'Signataires invalides : domaine @vandenbroele.be requis.' }),
-            { status: 400, headers: { 'Content-Type': 'application/json', ...cors } }
-          );
-        }
-      } else {
+        if (invalid) return `${label} invalides : domaine @vandenbroele.be requis.`;
+        return null;
+      };
+
+      const errSig = Array.isArray(payloadSigners)  && payloadSigners.length  > 0
+        ? validateEmails(payloadSigners,   'Signataires')  : null;
+      const errApp = Array.isArray(payloadApprovers) && payloadApprovers.length > 0
+        ? validateEmails(payloadApprovers, 'Approbateurs') : null;
+
+      if (errSig || errApp) {
+        return new Response(
+          JSON.stringify({ message: errSig || errApp }),
+          { status: 400, headers: { 'Content-Type': 'application/json', ...cors } }
+        );
+      }
+
+      if (!Array.isArray(payloadSigners) || payloadSigners.length === 0) {
         body.Documents[0].Signers = [
           { UserEmail: env.ESIGNFLOW_SIGNER1_EMAIL, Order: 1 },
           { UserEmail: env.ESIGNFLOW_SIGNER2_EMAIL, Order: 2 },

@@ -63,6 +63,8 @@ Retourne exactement ce JSON (tous les champs requis) :
 CATÉGORIES DISPONIBLES :
 ${catList}`;
 
+  if (!WORKER_URL) throw new Error('VITE_WORKER_URL non configuré — vérifiez votre fichier .env');
+
   const res = await fetch(`${WORKER_URL}/openai/v1/chat/completions`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
@@ -72,7 +74,10 @@ ${catList}`;
       messages: [{ role: 'system', content: system }, { role: 'user', content: user }],
     }),
   });
-  if (!res.ok) throw new Error(`API ${res.status}`);
+  if (!res.ok) {
+    const body = await res.text().catch(() => '');
+    throw new Error(`API ${res.status}${body ? ` : ${body.slice(0, 200)}` : ''}`);
+  }
   const data = await res.json();
   return JSON.parse(data.choices[0].message.content);
 }

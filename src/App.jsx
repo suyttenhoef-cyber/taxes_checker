@@ -15,6 +15,8 @@ import RegleResultat       from './components/RegleResultat.jsx';
 import FormulaireEntree    from './components/FormulaireEntree.jsx';
 import OngletBibliotheque  from './components/OngletBibliotheque.jsx';
 import OngletDocuments     from './components/OngletDocuments.jsx';
+import OngletDashboard     from './components/OngletDashboard.jsx';
+import OngletSignatures    from './components/OngletSignatures.jsx';
 import PanelProfil         from './components/PanelProfil.jsx';
 import SignaturePanel      from './components/SignaturePanel.jsx';
 
@@ -27,7 +29,7 @@ const COUL_GRAV  = { erreur: '#DC2626', avertissement: '#D97706', info: '#1A3A5C
 const LABEL_GRAV = { erreur: '❌ Erreurs bloquantes', avertissement: '⚠️ Avertissements', info: 'ℹ️ Bonnes pratiques' };
 
 export default function App() {
-  const [onglet,          setOnglet]   = useState('generer');
+  const [onglet,          setOnglet]   = useState('accueil');
   const [biblio,          setBiblio]   = useState(() => mergerBiblio(SOURCE));
   const [params,          setParams]   = useState(() => {
     const pr = chargerProfil();
@@ -178,11 +180,12 @@ export default function App() {
   ).length;
 
   const ONGLETS = [
-    ['generer',     '✏️ Règlements',  false],
-    ['documents',   '📋 Séance',      false],
-    ['verifier',    '✅ Vérifier',    false],
-    ['signer',      '✍️ Signer',      !texteGenere],
-    ['bibliotheque','📚 Bibliothèque',false],
+    ['accueil',      '🏠 Accueil',       false],
+    ['generer',      '✏️ Règlements',    false],
+    ['documents',    '📋 Séance',        false],
+    ['signatures',   '✍️ Signatures',    false],
+    ['verifier',     '✅ Vérifier',      false],
+    ['bibliotheque', '📚 Bibliothèque',  false],
   ];
 
   return (
@@ -399,7 +402,24 @@ export default function App() {
                 )}
               </div>
             )}
+
+            {/* Signature inline après export Word */}
+            {docxBlob && etapeGen === 'resultat' && (
+              <SignaturePanel
+                docxBlob={docxBlob}
+                params={params}
+                profil={profil}
+                onSigne={handleSigne}
+                docLabel={params.objet ? `Règlement — ${params.objet}` : 'Règlement'}
+                docType="reglement"
+              />
+            )}
           </>
+        )}
+
+        {/* ═══ ACCUEIL ═══ */}
+        {onglet === 'accueil' && (
+          <OngletDashboard profil={profil} biblio={biblio} onNavigate={tab => setOnglet(tab)} />
         )}
 
         {/* ═══ SÉANCE ═══ */}
@@ -461,9 +481,9 @@ export default function App() {
           </>
         )}
 
-        {/* ═══ SIGNER ═══ */}
-        {onglet === 'signer' && (
-          <SignaturePanel docxBlob={docxBlob} params={params} profil={profil} onSigne={handleSigne} />
+        {/* ═══ SIGNATURES ═══ */}
+        {onglet === 'signatures' && (
+          <OngletSignatures />
         )}
 
         {/* ═══ BIBLIOTHÈQUE ═══ */}
