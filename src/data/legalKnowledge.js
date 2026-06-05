@@ -180,7 +180,7 @@ export const ARTICLES_OBLIGATOIRES = [
     id:          'transmission',
     titre:       "Transmission à l'autorité de tutelle",
     gravite:     'majeur',
-    description: "Le règlement-taxe est soumis à la tutelle générale d'ANNULATION (pas d'approbation préalable). La délibération doit être transmise au Gouvernement wallon dans les 15 jours suivant le vote. À l'expiration du délai de tutelle de 30 jours sans réaction = accord tacite. Ne pas confondre avec la tutelle d'approbation.",
+    description: "Le règlement-taxe est soumis à la tutelle SPÉCIALE D'APPROBATION du Gouvernement wallon (CDLD art. L3122-2 §1er). Procédure : transmission dans les 15 jours du vote → approbation formelle par arrêté ministériel OU accord tacite après 30 jours (silence = approuvé). Après réception de l'arrêté au Collège (dans les 5 jours), le règlement peut être publié. Sans approbation expresse ou tacite, le règlement-taxe n'a pas force exécutoire. Ne pas confondre : c'est bien une tutelle D'APPROBATION pour les taxes (pas d'annulation).",
     exemple:     "Art. [...]. — La présente délibération sera transmise à l'autorité de tutelle dans les délais légaux.",
   },
   {
@@ -220,7 +220,11 @@ Source : Circulaire budgétaire DGPL 2025 — Chapitre VI.2
    - Affecté aux services d'utilité GÉNÉRALE (bénéfice collectif, pas individuel)
    Fondement constitutionnel : art. 41, 162, 170 §4 Constitution.
    Base légale procédurale : CDLD art. L3321-1 à L3321-12.
-   Tutelle : générale d'ANNULATION (transmission obligatoire, pas d'approbation préalable).
+   Tutelle : SPÉCIALE D'APPROBATION du Gouvernement wallon (CDLD art. L3122-2 §1er).
+             Procédure : adoption → transmission dans 15 jours → approbation formelle
+             (arrêté ministériel) OU accord tacite après 30 jours (silence = approuvé) →
+             réception arrêté au Collège → publication → entrée en vigueur (5ème jour suivant).
+             Sans approbation (expresse ou tacite), le règlement-taxe n'a pas force exécutoire.
 
 2. REDEVANCE COMMUNALE — DÉFINITION VERBATIM DE RÉFÉRENCE
    Cour de cassation, 10 mai 2002 et 14 janvier 2013 ;
@@ -403,10 +407,12 @@ LIGNE DU TEMPS OBLIGATOIRE — 7 ÉTAPES :
    → Maximum 15 jours après le vote
    → Via le Directeur financier (tutelle générale d'annulation)
 
-5. Délai de tutelle
-   → 30 jours pour approbation, annulation ou absence de réaction
-   → À l'expiration sans réaction : accord TACITE
+5. Délai de tutelle — TUTELLE SPÉCIALE D'APPROBATION (CDLD art. L3122-2 §1er)
+   → 30 jours pour l'approbation formelle (arrêté ministériel) ou le refus
+   → À l'expiration sans réaction : accord TACITE (réputé approuvé)
    → Prorogation possible dans les cas CDLD
+   → ATTENTION : c'est une tutelle D'APPROBATION (pas d'annulation). Sans approbation
+     (expresse ou tacite), le règlement-taxe n'acquiert pas force exécutoire.
 
 6. Publication OBLIGATOIRE — DOUBLE ACTE SIMULTANÉ LE MÊME JOUR
    → Cour de Cassation : les DEUX actes suivants doivent intervenir LE MÊME JOUR :
@@ -552,7 +558,9 @@ ERREURS FRÉQUENTES DANS LES RÈGLEMENTS COMMUNAUX WALLONS
    - Règlement ne mentionnant pas l'abrogation explicite du règlement précédent.
    - Exercice fiscal mentionné dans le règlement déjà écoulé au moment de l'adoption.
    - Contradiction entre le titre ("redevance") et le corps du texte ("taxe" ou vice versa).
-   - Tutelle d'approbation mentionnée pour une taxe (qui ne requiert que la tutelle d'annulation).
+   - Tutelle d'ANNULATION mentionnée pour une taxe : ERREUR — les règlements-taxes wallons sont
+     soumis à la tutelle SPÉCIALE D'APPROBATION (CDLD art. L3122-2 §1er), pas à la tutelle
+     d'annulation. La mention d'une tutelle d'approbation est donc CORRECTE et OBLIGATOIRE.
    - Règlement modifié par article modificatif partiel au lieu d'être revoté dans son intégralité.
 `;
 
