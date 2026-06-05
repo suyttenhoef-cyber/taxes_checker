@@ -181,30 +181,30 @@ async function runSynthese(texte, agentResults) {
     .filter(r => r.status === 'fulfilled')
     .map(r => {
       const v = r.value;
-      const critiques = v.findings?.filter(f => f.gravite === 'critique').length || 0;
-      const majeurs   = v.findings?.filter(f => f.gravite === 'majeur').length || 0;
-      return `Agent ${v.agent} (score: ${v.score}/100, statut: ${v.statut}) — ${critiques} critique(s), ${majeurs} majeur(s)\nRésumé: ${v.resume}`;
+      const critiques = (v.findings || []).filter(f => f.gravite === 'critique');
+      const majeurs   = (v.findings || []).filter(f => f.gravite === 'majeur');
+      const lines = [...critiques, ...majeurs]
+        .map(f => `  - [${f.gravite.toUpperCase()}] ${f.titre}${f.article ? ' (' + f.article + ')' : ''}`)
+        .join('\n');
+      return `Agent ${v.agent} (score: ${v.score}/100, statut: ${v.statut})\nRésumé: ${v.resume}\nProblèmes principaux:\n${lines || '  (aucun)'}`;
     }).join('\n\n');
 
   const erreurAgents = agentResults
     .filter(r => r.status === 'rejected')
-    .map((r, i) => `Agent échoué: ${r.reason?.message}`).join('\n');
+    .map(r => `Agent échoué: ${r.reason?.message}`).join('\n');
 
   const system = `Tu es un juriste administratif expert en droit communal wallon.
 Tu reçois les résultats de 5 agents d'analyse spécialisés d'un règlement-taxe/redevance communal.
 Tu dois produire une synthèse globale consolidée.
 
-Retourne UNIQUEMENT un objet JSON valide :
+Retourne UNIQUEMENT un objet JSON valide avec exactement ces 4 champs :
 {
   "scoreGlobal": [moyenne pondérée des scores agents, entier 0-100],
   "niveau": "[insuffisant | a_ameliorer | acceptable | bon | excellent]",
   "resumeExecutif": "[3-4 phrases : nature du règlement, points forts, points à corriger en priorité]",
-  "pointsCritiques": [liste des findings gravite=critique de tous les agents],
-  "avertissements": [liste des findings gravite=majeur de tous les agents],
-  "pointsConformes": [liste des findings gravite=info de tous les agents],
   "recommandationPrincipale": "[action la plus urgente à mener, 1 phrase]"
 }
-Les scoreGlobal : critique présent → max 59 · aucun critique mais majeurs → max 79 · aucun critique/majeur → 80+.`;
+Règle scoreGlobal : critique présent → max 59 · aucun critique mais majeurs → max 79 · aucun critique/majeur → 80+.`;
 
   const res = await fetch(`${WORKER_URL}/openai/v1/chat/completions`, {
     method:  'POST',
@@ -250,6 +250,14 @@ export async function verifierAvecIA(texte, onProgress) {
   onProgress?.('agents_termines', 5, 6);
 
   const synthese = await runSynthese(texte, settled);
+
+  // Aggregate findings from agent results — GPT only provides score/niveau/résumé
+  const allFindings = settled
+    .filter(r => r.status === 'fulfilled')
+    .flatMap(r => r.value.findings || []);
+  synthese.pointsCritiques = allFindings.filter(f => f.gravite === 'critique');
+  synthese.avertissements  = allFindings.filter(f => f.gravite === 'majeur');
+  synthese.pointsConformes = allFindings.filter(f => f.gravite === 'info');
 
   onProgress?.('complet', 6, 6);
 
