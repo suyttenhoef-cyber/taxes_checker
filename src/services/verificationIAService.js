@@ -88,10 +88,11 @@ Vérifie :
 5. Des visas situationnels sont-ils nécessaires (RGPD, décrets sectoriels) ?`,
   },
   {
-    key:    'structure',
-    label:  'Structure et articles obligatoires',
+    key:       'structure',
+    label:     'Structure et articles obligatoires',
+    maxTokens: 2500,
     system: buildSystem('structure',
-      'Structure du règlement — vérifier la présence et la qualité de chaque article obligatoire (objet, redevable, assiette, taux, exonérations, déclaration, enrôlement, réclamation, transmission, entrée en vigueur).'),
+      "Structure du règlement — vérifier la présence et la qualité de chaque article obligatoire (objet, redevable, assiette, taux, exonérations, déclaration, enrôlement, taxation d'office, réclamation, transmission, entrée en vigueur)."),
     userPrefix: `Analyse la STRUCTURE ET LES ARTICLES OBLIGATOIRES du règlement ci-dessous.
 Vérifie la présence et la qualité de :
 1. Article objet / matière imposable (clairement défini ?)
@@ -99,12 +100,13 @@ Vérifie la présence et la qualité de :
 3. Article assiette / base imposable (univoque ?)
 4. Article taux ou tarif (montant explicite, sans renvoi à un document non adopté ?)
 5. Article exonérations (présent même si "aucune" ?)
-6. Article déclaration (modalités claires ?)
+6. Article déclaration avec délai PRÉCIS (obligatoire pour taxation d'office — CE 250.321/2021)
 7. Article enrôlement (rôle rendu exécutoire par le collège ?)
-8. Article réclamation (délai 3 mois, adresse DG, forme écrite ?)
-9. Article transmission à la tutelle
-10. Article entrée en vigueur
-11. Article abrogation si nécessaire`,
+8. Article taxation d'office (procédure, accroissements ?)
+9. Article réclamation (délai 1 AN depuis 2023, auprès du Collège communal — L3321-9 CDLD)
+10. Article transmission à la tutelle
+11. Article entrée en vigueur (5ème jour suivant publication)
+12. Article abrogation si nécessaire`,
   },
   {
     key:    'droits',
@@ -154,7 +156,7 @@ ${texte.slice(0, 12000)}
     headers: { 'Content-Type': 'application/json' },
     body:    JSON.stringify({
       model:           'gpt-4o',
-      max_tokens:      1400,
+      max_tokens:      config.maxTokens || 1400,
       response_format: { type: 'json_object' },
       messages: [
         { role: 'system', content: config.system },
