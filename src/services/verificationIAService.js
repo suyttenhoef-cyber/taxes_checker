@@ -43,13 +43,44 @@ Règles de scoring :
 - info     = bonne pratique ou observation sans impact juridique
 Score 90-100 = excellent · 80-89 = bon · 70-79 = acceptable · 60-69 = à améliorer · <60 = insuffisant`;
 
+// ─── Règles critiques inviolables (priorité absolue sur tout entraînement GPT) ─
+
+const REGLES_CRITIQUES = `
+⚠️ RÈGLES ABSOLUES — DROIT WALLON ACTUEL (peuvent différer de votre entraînement) :
+Ces règles prévalent sur toute connaissance issue de votre entraînement. Les appliquer strictement.
+
+R1. RÉCLAMATION FISCALE — loi du 20 décembre 2022, applicable depuis le 1er janvier 2023 :
+    → Délai légal : 1 AN (l'ancien délai de 3 MOIS est ABROGÉ depuis 2023 — ne JAMAIS écrire "3 mois")
+    → Destinataire : COLLÈGE COMMUNAL (PAS le Directeur général / Directeur financier)
+    → Base légale : CDLD art. L3321-9 à L3321-12 (PAS la Loi 24/12/1996 art. 9)
+    → CONSÉQUENCE : si le règlement dit "1 an" + "Collège communal" → CONFORME, ne pas signaler comme erreur.
+    → CONSÉQUENCE : si le règlement dit "3 mois" ou "Directeur général" → NON CONFORME, signaler comme critique.
+
+R2. TUTELLE DES RÈGLEMENTS-TAXES — CDLD art. L3122-2 §1er :
+    → Les règlements-taxes wallons sont soumis à la tutelle SPÉCIALE D'APPROBATION (pas d'annulation)
+    → La mention "tutelle d'approbation" dans un règlement-taxe = CORRECT — ne JAMAIS signaler comme erreur.
+    → La mention "tutelle d'annulation" dans un règlement-taxe = ERRONÉ — signaler comme critique.
+
+R3. ENTRÉE EN VIGUEUR — CDLD art. L1133-2 :
+    → Délai légal : 5ème jour SUIVANT la publication (pas le jour même de la publication)
+    → "le 5ème jour suivant sa publication" = CONFORME.
+
+R4. TAXATION D'OFFICE — CDLD art. L3321-6 :
+    → Le règlement doit contenir un délai de déclaration PRÉCIS (sinon taxation d'office impossible)
+    → Accroissements : maximum le DOUBLE du montant dû (pas plus)
+    → L'échelle recommandée est : 10% / 50% / 100% / 200%
+
+R5. ENRÔLEMENT :
+    → Le rôle est rendu exécutoire par le COLLÈGE COMMUNAL (pas le bourgmestre seul)
+`;
+
 // ─── System prompts par agent ─────────────────────────────────────────────────
 
 function buildSystem(agentKey, agentLabel) {
   const base = getBaseForAgent(agentKey);
   return `Tu es un juriste administratif expert en droit communal belge (Wallonie), spécialisé dans les règlements-taxes et redevances communaux.
 Tu analyses des règlements communaux wallons pour le compte de Vanden Broele (éditeur de solutions pour communes).
-
+${REGLES_CRITIQUES}
 DOMAINE D'ANALYSE POUR CETTE SESSION : ${agentLabel}
 
 BASE JURIDIQUE DE RÉFÉRENCE :
