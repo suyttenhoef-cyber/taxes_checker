@@ -17,6 +17,7 @@ import OngletBibliotheque  from './components/OngletBibliotheque.jsx';
 import OngletDocuments     from './components/OngletDocuments.jsx';
 import OngletDashboard     from './components/OngletDashboard.jsx';
 import OngletSignatures    from './components/OngletSignatures.jsx';
+import OngletVerifier      from './components/OngletVerifier.jsx';
 import PanelProfil         from './components/PanelProfil.jsx';
 import SignaturePanel      from './components/SignaturePanel.jsx';
 
@@ -429,56 +430,7 @@ export default function App() {
 
         {/* ═══ VÉRIFIER ═══ */}
         {onglet === 'verifier' && (
-          <>
-            <div className="vb-card mb-5">
-              <h3 className="text-vb-bleu mt-0 text-[16px] font-bold">Vérification de conformité ({resultatsVerif?.length || 0} règles)</h3>
-              <p className="text-vb-gris text-[13px] mt-0">Collez le texte complet d'un règlement-taxe ou redevance wallon.</p>
-              <textarea className="vb-input h-[220px] resize-y" style={{ fontFamily: 'Georgia, serif', fontSize: 13, lineHeight: 1.6 }}
-                placeholder="Collez ici le texte complet du règlement à analyser…"
-                value={texteVerif} onChange={e => setTexteVerif(e.target.value)} />
-              {erreur && <div className="mt-2 px-3.5 py-2.5 bg-vb-rouge-clair border border-vb-rouge rounded-md text-vb-rouge text-[13px]">{erreur}</div>}
-              <button onClick={lancerVerif} className="mt-3.5 vb-btn bg-vb-bleu text-white px-6 py-2.5 text-[14px]">✅ Analyser</button>
-            </div>
-
-            {resultatsVerif && stats && (
-              <>
-                <div className="grid grid-cols-4 gap-3 mb-5">
-                  {[
-                    { l: 'Conformes',          v: stats.ok,   cls: 'bg-vb-vert-clair text-vb-vert',   ic: '✅' },
-                    { l: 'Erreurs bloquantes', v: stats.err,  cls: 'bg-vb-rouge-clair text-vb-rouge',  ic: '❌' },
-                    { l: 'Avertissements',     v: stats.warn, cls: 'bg-vb-jaune-clair text-vb-jaune',  ic: '⚠️' },
-                    { l: 'Vérif. manuelle',    v: stats.man,  cls: 'bg-vb-bleu-light text-vb-bleu',    ic: '👁️' },
-                  ].map(({ l, v, cls, ic }) => (
-                    <div key={l} className={`${cls} border border-current/20 rounded-xl px-4 py-3.5 text-center`}>
-                      <div className="text-[28px] font-extrabold">{v}</div>
-                      <div className="text-[12px] font-semibold">{ic} {l}</div>
-                    </div>
-                  ))}
-                </div>
-
-                <div className="vb-card p-0 overflow-hidden">
-                  {['erreur', 'avertissement', 'info'].map(grav => {
-                    const grp = resultatsVerif.filter(r => r.gravite === grav);
-                    if (!grp.length) return null;
-                    const nbEchecs = grp.filter(r => r.statut === 'echec').length;
-                    return (
-                      <div key={grav}>
-                        <div className="px-4 py-2.5 font-bold text-[13px] border-b border-vb-border"
-                          style={{ color: COUL_GRAV[grav], background: COUL_GRAV[grav] + '18' }}>
-                          {LABEL_GRAV[grav]} ({nbEchecs} sur {grp.length})
-                        </div>
-                        {grp.map((r, i) => <RegleResultat key={r.id} r={r} i={i} />)}
-                      </div>
-                    );
-                  })}
-                </div>
-
-                <div className="mt-3.5 px-3.5 py-2.5 bg-vb-jaune-clair border border-vb-jaune rounded-md text-[12px] text-vb-jaune">
-                  ⚠️ Vérification automatique — ne remplace pas l'examen d'un juriste.
-                </div>
-              </>
-            )}
-          </>
+          <OngletVerifier texteInitial={texteGenere} />
         )}
 
         {/* ═══ SIGNATURES ═══ */}
