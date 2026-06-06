@@ -9,7 +9,7 @@
  *   - CRAF (loi 13 avril 2019)
  */
 
-export const LEGAL_KNOWLEDGE_VERSION = '2026-06-enrichi';
+export const LEGAL_KNOWLEDGE_VERSION = '2026-06-modeles';
 
 // ─── Visas obligatoires ───────────────────────────────────────────────────────
 
@@ -564,12 +564,224 @@ ERREURS FRÉQUENTES DANS LES RÈGLEMENTS COMMUNAUX WALLONS
    - Règlement modifié par article modificatif partiel au lieu d'être revoté dans son intégralité.
 `;
 
+// ─── Formulations types extraites de 30 modèles réels ────────────────────────
+
+export const MODELES_ARTICLES = `
+FORMULATIONS TYPES EXTRAITES DE RÈGLEMENTS COMMUNAUX WALLONS RÉELS
+Source : analyse de 30 modèles officiels Vanden Broele (juin 2026)
+
+1. ARTICLE RÉCLAMATION — FORMULATION PAR RENVOI (la plus répandue, conforme)
+"Article X – Recouvrement - Contentieux
+Les clauses concernant l'établissement, le recouvrement et le contentieux sont celles des
+articles L3321-1 à L3321-12 du Code de la Démocratie et de la Décentralisation et de l'arrêté
+royal du 12 avril 1999, déterminant la procédure devant le gouverneur ou devant le collège
+des bourgmestre et échevins en matière de réclamation contre une imposition provinciale ou
+communale."
+→ CONFORME : renvoi à L3321-1 à L3321-12 + AR 12 avril 1999. Délai de 1 an et destinataire
+  (Collège des BéE) déterminés par renvoi légal.
+
+2. ARTICLE RÉCLAMATION — FORMULATION EXPLICITE CONFORME (recommandée pour lisibilité)
+"Les réclamations contre l'enrôlement doivent être introduites, par écrit, auprès du collège
+communal dans un délai d'un an à dater du troisième jour ouvrable suivant l'envoi de
+l'avertissement-extrait de rôle. À défaut de décision du collège dans les six mois de la
+réception de la réclamation, celle-ci est réputée fondée."
+→ CONFORME : délai 1 an + Collège communal (loi 20/12/2022).
+
+3. ARTICLE RÉCLAMATION — FORMULATIONS NON CONFORMES (à corriger impérativement)
+"délai de 3 mois" → ERRONÉ (ancien droit pré-2023)
+"Directeur général" ou "Secrétaire communal" comme destinataire → ERRONÉ
+
+4. ARTICLE DÉCLARATION — FORMULATION TYPE (taxes par rôle avec déclaration)
+"L'administration communale adresse au contribuable un extrait du règlement ainsi qu'une
+formule de déclaration que celui-ci est tenu de renvoyer, dûment remplie et signée, dans les
+30 jours de l'envoi de celle-ci. A défaut d'avoir reçu cette déclaration, le contribuable est
+tenu de donner à l'administration communale tous les éléments nécessaires à la taxation, et
+ce, au plus tard le 30 juin de l'exercice d'imposition. La déclaration reste valable jusqu'à
+sa révocation, laquelle doit intervenir au plus tard le 30 juin de l'exercice d'imposition.
+Conformément à l'article L3321-6 du Code de la Démocratie Locale et de la Décentralisation,
+la non-déclaration dans les délais prévus, la déclaration incorrecte, incomplète ou imprécise
+entraîne l'enrôlement d'office de la taxe.
+Dans ce cas, le montant de la majoration sera établi de la manière suivante :
+1ère infraction : majoration de 50% ;
+2ème infraction et suivantes : majoration de 100%."
+
+5. ARTICLE ENRÔLEMENT — FORMULATION TYPE
+"La taxe est perçue par voie de rôle et payable dans les deux mois à dater de la date d'envoi
+de l'avertissement-extrait de rôle. À défaut de paiement dans les délais prévus, conformément
+à l'article L3321-8bis du Code de la démocratie locale et de la décentralisation, une sommation
+de payer sera envoyée au contribuable. Cette sommation de payer se fera par courrier recommandé
+et les frais postaux de cet envoi seront à charge du redevable."
+
+6. ARTICLE ENTRÉE EN VIGUEUR — FORMULATION TYPE
+"Le présent règlement entrera en vigueur après accomplissement des formalités de la publication
+faites conformément aux articles L1133-1 à 2 du Code de la Démocratie Locale et de la
+Décentralisation."
+→ Entrée en vigueur effective = 5ème jour SUIVANT la publication (art. L1133-2 CDLD).
+
+7. ARTICLE TUTELLE — FORMULATION TYPE (taxes ordinaires)
+"Le présent règlement sera transmis au Gouvernement wallon conformément aux articles L3131-1
+et suivants du Code de la Démocratie Locale et de la Décentralisation pour exercice de la
+tutelle spéciale d'approbation."
+→ TUTELLE SPÉCIALE D'APPROBATION pour tous les règlements-taxes ordinaires.
+→ EXCEPTION ABSOLUE : taxe additionnelle IPP → tutelle GÉNÉRALE D'ANNULATION avec transmission
+  obligatoire (CDLD art. L3122-2, 7°) — ne jamais utiliser la tutelle d'approbation pour l'add. IPP.
+
+8. ARTICLE ABROGATION — FORMULATION RECOMMANDÉE
+Aucun article d'abrogation n'est systématiquement présent dans les modèles analysés (lacune fréquente).
+Formulation recommandée : "Le présent règlement abroge et remplace le règlement [intitulé] adopté
+par le Conseil communal en date du [date]."
+
+9. INDEXATION DES TAUX — FORMULATION TYPE (règlements pluriannuels jusqu'en 2031)
+"Pour les exercices xxxx à 2031, ces taux seront indexés selon le rapport entre l'indice des
+prix à la consommation (base 2013) du mois de janvier de l'avant-dernier exercice et celui du
+mois de janvier du dernier exercice."
+`;
+
+// ─── Règles spécifiques par type de règlement ────────────────────────────────
+
+export const TYPES_REGLEMENT = `
+RÈGLES SPÉCIFIQUES PAR TYPE DE RÈGLEMENT COMMUNAL WALLON
+Source : analyse de 30 modèles Vanden Broele (juin 2026) + CDLD + circulaire DGPL 2025
+
+══════════════════════════════════════════════════════
+TAXES COMMUNALES — CAS PARTICULIERS
+══════════════════════════════════════════════════════
+
+[TYPE : TAXE ADDITIONNELLE IPP]
+Visa constitutionnel : art. 170 §4 Constitution
+Visa OBLIGATOIRE : CIR92 art. 465 à 469 + CDLD art. L1122-30 + L3122-2, 7°
+TUTELLE : GÉNÉRALE D'ANNULATION avec TRANSMISSION OBLIGATOIRE (CDLD art. L3122-2, 7°)
+          JAMAIS la tutelle spéciale d'approbation (erreur très fréquente).
+Adoption : AVANT le 31 janvier de l'exercice (délai légal impératif — irrecevable après)
+Exercice : annuel unique — délibération à renouveler chaque année (pas de pluriannualité)
+Articles : objet et taux fusionnés en un seul article ; pas de déclaration ni d'enrôlement communal
+Recouvrement : assuré par l'État fédéral (Administration des contributions directes)
+ERREURS FRÉQUENTES :
+- Prévoir tutelle spéciale d'approbation au lieu de tutelle générale d'annulation
+- Établir la taxe pour plusieurs exercices consécutifs
+- Omettre le visa de l'article L3122-2, 7° CDLD dans les références légales
+
+[TYPE : TAXE SUR LES AGENCES BANCAIRES]
+Visa spécifique : loi du 25 avril 2014 relative au statut et contrôle des établissements de crédit
+Unité de taxation : le "poste de réception" (guichet humain) — PAS l'établissement ni la superficie
+Les distributeurs automatiques de billets et guichets automatisés sont EXCLUS de la base taxable.
+Déclaration : reconductible tacitement d'exercice en exercice jusqu'à révocation (au plus tard 30 juin)
+ERREURS : absence d'exonérations pour établissements publics (risque art. 172 Constitution)
+
+[TYPE : TAXE SUR LES SECONDES RÉSIDENCES]
+Visa spécifique : CWASS art. 334, 2° (Code wallon de l'Action sociale et de la Santé)
+Fait générateur : logement existant au 1er janvier, dont l'occupant n'est pas inscrit au registre de
+                  la population ou des étrangers.
+Exclus du champ : gîtes ruraux, gîtes à la ferme, meublés de tourisme, chambres d'hôtes
+Exonération LÉGALEMENT OBLIGATOIRE (CWASS art. 334, 2°) : propriétaires hébergés en maison de repos
+  ou lieu de soin, sauf si d'autres personnes occupent effectivement le bien.
+Codébiteurs : propriétaire en cas de location ; copropriétaires en indivision ;
+              usufruitier + nu-propriétaire en cas de démembrement.
+Non-cumul : si l'immeuble est aussi qualifiable d'immeuble inoccupé, seule la taxe sur les immeubles
+            inoccupés est due (règle de subsidiarité).
+
+[TYPE : TAXE SUR LES IMMEUBLES BÂTIS INOCCUPÉS]
+Visa spécifique : décret wallon 1er oct. 2021 modifiant Code wallon de l'habitation durable
+Fait générateur : DEUX CONSTATS consécutifs distancés d'au moins 6 mois (procédure administrative,
+                  pas déclaration du contribuable).
+Assiette : mètres courants de façade principale × nombre de niveaux inoccupés
+           (hors caves, sous-sols, combles non aménagés).
+Taux : progressif à 3 paliers (1ère, 2ème, 3ème taxation et suivantes) + indexation IPC
+Redevable : titulaire du droit réel à la date du 2ème constat + codébiteurs solidaires si pluralité
+Exonérations : circonstances indépendantes de la volonté (max 1 an) ; travaux (max 5 exercices avec
+               dossier justificatif) ; vente/location (max 2 exercices) — charge de la preuve sur le contribuable
+Continuité : le 1er constat établi sous un règlement antérieur garde sa validité
+
+[TYPE : TAXE SUR LES INHUMATIONS / DISPERSIONS DE CENDRES / COLUMBARIUM]
+Visa spécifique : CDLD art. L1232-1 à 32 + loi du 20 juillet 1971 (funérailles et sépultures)
+                  + éventuellement Code wallon du bien-être animal
+Perception : au COMPTANT lors de la demande d'autorisation (pas de rôle)
+Exonérations étendues (quasi-obligatoires au regard du principe d'égalité) :
+  - personnes décédées ou trouvées mortes sur le territoire de la commune (quel que soit le domicile)
+  - personnes inscrites ou en instance d'inscription au registre de la population au moment du décès
+  - indigents ; militaires et civils morts pour la Patrie
+  - anciens habitants (ayant vécu au moins 1/3 de leur existence sur le territoire)
+  - cendres d'animaux inhumées avec celles de leur propriétaire (Code wallon bien-être animal)
+Assiette implicite : 1 unité par acte (pas d'article d'assiette distinct)
+
+[TYPE : TAXE SUR PARCELLES NON BÂTIES EN LOTISSEMENT]
+Visa spécifique : CoDT art. D.VI.64 + loi du 22 décembre 1970 sur le bail à ferme
+Redevable dual successif : propriétaire lotisseur jusqu'à cession → puis acquéreur dès 2ème année
+Assiette : mètres courants à front de voirie (façade principale) — plafonnée par parcelle
+Exemption : 1 an pour le titulaire du premier permis d'urbanisation (dès année suivant la délivrance)
+Exonérations : propriétaires d'une seule parcelle (max 5 exercices) ; sociétés logements sociaux
+               agréées ; terrains sous bail à ferme (inconstructibles légalement)
+
+[TYPE : TAXE SUR LES ÉGOUTS (raccordés ou susceptibles d'être raccordés)]
+Fait générateur dual : raccordement effectif OU position en bordure de voirie équipée d'un égout
+Redevable tripartite : habitants inscrits aux registres + seconds résidents + personnes exerçant
+                       une activité sur le territoire
+Multiple raccordements sur un même immeuble : taxe due pour CHACUN d'eux
+Exonération : immeubles affectés à une administration publique ou établissement d'utilité publique
+Déclaration : souvent absente — rôle basé sur registres de population et cadastre
+
+[TYPE : TAXE SUR LES DEMANDES DE CHANGEMENT DE NOM]
+Visa spécifique : loi du 7 janvier 2024 (modification code civil, changement de nom)
+ATTENTION — BASE CONSTITUTIONNELLE FRAGILE : la loi du 7/1/2024 ne confère pas d'habilitation
+  explicite au sens de l'art. 173 Constitution → le considérant justificatif est ESSENTIEL dans les
+  visas et doit être maintenu intégralement.
+Perception : au comptant lors de la demande (pas d'enrôlement ni de déclaration préalable)
+Unicité : taxe due une seule fois même si le changement s'étend aux descendants mineurs
+
+══════════════════════════════════════════════════════
+REDEVANCES COMMUNALES
+══════════════════════════════════════════════════════
+
+[TYPE : REDEVANCE SUR LES BORNES DE RECHARGE ÉLECTRIQUE]
+Visa constitutionnel : art. 173 Constitution (REDEVANCE) — et NON art. 170 §4 (réservé aux taxes)
+Double composante tarifaire : (1) redevance de fourniture d'électricité (€/kWh)
+                               (2) redevance d'occupation dissuasive (€/heure après recharge complète,
+                                   sur une plage horaire limitée ex. 8h-23h)
+Perception : déléguée à un prestataire privé mandaté par le Collège (marché public)
+Exercice : unique (pas de pluriannualité) — à renouveler annuellement
+Délai de réclamation pour redevances : à préciser explicitement (3 mois est insuffisant)
+ERREURS : interversion visa art. 170 §4 / art. 173 ; absence d'indexation pour règlements durables
+
+[TYPE : REDEVANCE POUR CAVEAU/COLUMBARIUM D'ATTENTE ET TRANSLATION DE RESTES MORTELS]
+Visa spécifique : loi du 20 juillet 1971 + CDLD art. L1232-1 à 32
+Exonération OBLIGATOIRE : dépôt résultant d'une décision de l'autorité ou d'un cas de force majeure
+Durée maximale non renouvelable : ex. 7 semaines (toute semaine commencée due en entier)
+Cumul des deux composantes (caveau + translation) expressément prévu dans le règlement
+Perception : par facture au terme de la période d'utilisation (pas de rôle)
+
+══════════════════════════════════════════════════════
+RÈGLES TRANSVERSALES À TOUS LES TYPES
+══════════════════════════════════════════════════════
+
+VISAS CONSTITUTIONNELS — NE PAS INTERVERTIR :
+  TAXE    → art. 41, 162, 170 §4, 172 Constitution
+  REDEVANCE → art. 41, 162, 173 Constitution
+  Intervertir les articles 170 §4 et 173 est une erreur fondamentale de qualification.
+
+INDEXATION — FORMULE UNIFORME (règlements pluriannuels jusqu'en 2031) :
+  "indexé selon le rapport entre l'IPC (base 2013) du mois de janvier de l'avant-dernier
+   exercice et celui du mois de janvier du dernier exercice."
+  Les règlements pluriannuels sans clause d'indexation sont à risque financier.
+
+RGPD — DURÉE DE CONSERVATION :
+  La durée de 30 ans citée dans plusieurs règlements mérite justification (délais de
+  prescription fiscale ordinaires = 7-10 ans). Article RGPD doit identifier : responsable
+  de traitement (Commune), finalité, base légale, catégories de données, durée, destinataires.
+  Données de santé (art. 9 RGPD) = catégorie sensible → traitement particulièrement encadré.
+
+ABROGATION — LACUNE SYSTÉMATIQUE :
+  Aucun règlement-modèle analysé ne comporte d'article d'abrogation explicite. Cette absence
+  est une lacune fréquente à signaler systématiquement lors de l'adoption d'un nouveau règlement
+  en remplacement d'un règlement antérieur.
+`;
+
 // ─── Base juridique structurée pour injection dans les prompts ────────────────
 
 export function getBaseForAgent(agentKey) {
   switch (agentKey) {
     case 'qualification':
-      return DISTINCTION_TAXE_REDEVANCE + '\n\n' + PRINCIPES_GENERAUX + '\n\n' + TAXES_INTERDITES;
+      return DISTINCTION_TAXE_REDEVANCE + '\n\n' + PRINCIPES_GENERAUX + '\n\n' +
+        TAXES_INTERDITES + '\n\n' + TYPES_REGLEMENT;
 
     case 'visas':
       return 'LISTE DES VISAS OBLIGATOIRES ET RECOMMANDÉS :\n\n' +
@@ -579,7 +791,17 @@ export function getBaseForAgent(agentKey) {
           `Contexte : ${v.contexte}\n` +
           (v.note ? `Note : ${v.note}` : '')
         ).join('\n\n') +
-        '\n\n' + ERREURS_FREQUENTES;
+        '\n\n' + ERREURS_FREQUENTES + '\n\n' +
+        'VISAS SPÉCIFIQUES PAR TYPE — EXTRAITS DE TYPES_REGLEMENT :\n' +
+        '(Art. 170 §4 = TAXE ; art. 173 = REDEVANCE — ne pas intervertir)\n' +
+        'Add. IPP : CIR92 art. 465-469 + CDLD L3122-2, 7° obligatoires.\n' +
+        'Secondes résidences : CWASS art. 334, 2° obligatoire.\n' +
+        'Immeubles inoccupés : décret wallon 1er oct. 2021 + CDLD L1232-1 à 32.\n' +
+        'Inhumations : loi 20/07/1971 + CDLD L1232-1 à 32.\n' +
+        'Terrains non bâtis : CoDT art. D.VI.64 + loi 22/12/1970 bail à ferme.\n' +
+        'Agences bancaires : loi 25 avril 2014 statut établissements de crédit.\n' +
+        'Changement de nom : loi 7 janvier 2024.\n' +
+        'Bornes recharge : directive européenne 23 avril 2009 + art. 173 Const. (redevance).\n';
 
     case 'structure':
       return 'ARTICLES OBLIGATOIRES DANS UN RÈGLEMENT-TAXE/REDEVANCE :\n\n' +
@@ -589,7 +811,8 @@ export function getBaseForAgent(agentKey) {
           (a.article ? `Référence légale : ${a.article}\n` : '') +
           `Exemple : ${a.exemple}`
         ).join('\n\n') +
-        '\n\n' + PROCEDURE_RECLAMATION + '\n\n' + TAXATION_OFFICE + '\n\n' + ERREURS_FREQUENTES;
+        '\n\n' + PROCEDURE_RECLAMATION + '\n\n' + TAXATION_OFFICE + '\n\n' +
+        MODELES_ARTICLES + '\n\n' + ERREURS_FREQUENTES;
 
     case 'droits':
       return PRINCIPES_GENERAUX + '\n\n' + PROCEDURE_RECLAMATION + '\n\n' +
@@ -609,7 +832,8 @@ export function getBaseForAgent(agentKey) {
 
     case 'coherence':
       return ERREURS_FREQUENTES + '\n\n' + PRINCIPES_GENERAUX + '\n\n' +
-        DISTINCTION_TAXE_REDEVANCE + '\n\n' + PUBLICATION_TIMELINE + '\n\n' + TAXES_INTERDITES;
+        DISTINCTION_TAXE_REDEVANCE + '\n\n' + PUBLICATION_TIMELINE + '\n\n' +
+        TAXES_INTERDITES + '\n\n' + TYPES_REGLEMENT;
 
     default:
       return PRINCIPES_GENERAUX;
@@ -632,6 +856,8 @@ export async function chargerBaseJuridique() {
     taxationOffice:       TAXATION_OFFICE,
     taxesInterdites:      TAXES_INTERDITES,
     erreursFréquentes:    ERREURS_FREQUENTES,
+    modelesArticles:      MODELES_ARTICLES,
+    typesReglement:       TYPES_REGLEMENT,
     getBaseForAgent,
   };
 }

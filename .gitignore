@@ -27,10 +27,13 @@ dist-ssr
 .env.local
 # PDFs sources — matériel d'extraction local, non requis pour le déploiement
 pdfs/
+*.pdf
 # Documents de travail locaux (contiennent des clés API / infos sensibles)
 *.docx
 ~$*
 spec_technique_*.md
 inspectin_*.md
+# Données extraites des modèles .docx — fichier volumineux local uniquement
+src/data/modeles_textes.json
 # Config Claude Code locale
 .claude/
