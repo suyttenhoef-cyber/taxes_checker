@@ -21,7 +21,7 @@ const SOURCE = (() => {
 })();
 
 const SIDEBAR_BG = '#0D1B35';
-const TEAL       = '#17B8B5';
+const TEAL       = '#2BEBCE';
 
 const NAV_ITEMS = [
   { key: 'accueil',      icon: '🏠', label: 'Accueil' },
