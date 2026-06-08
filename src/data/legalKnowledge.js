@@ -384,13 +384,21 @@ PROCÉDURE EN 4 ÉTAPES :
   - Destinataire : COLLÈGE COMMUNAL (pas le Directeur général / Directeur financier)
   - Forme : réclamation ÉCRITE, signée par le redevable ou son mandataire
 
-ÉTAPE 2 — DÉCISION DU COLLÈGE (L3321-10 CDLD)
-  - Délai de décision : 6 MOIS maximum à partir de la réception de la réclamation
-  - Si aucune décision dans les 6 mois : réclamation réputée FONDÉE d'office (avantage au réclamant)
+ÉTAPE 2 — DÉCISION DU COLLÈGE (L3321-10 à L3321-12 CDLD)
+  - Délai de décision : 6 MOIS à partir de la réception de la réclamation
+    → 9 MOIS en cas de taxation d'office (L3321-12 renvoyant au CIR92)
+  - EFFET DU SILENCE — RÈGLE EXACTE (ERREUR FRÉQUENTE) :
+    Si le Collège ne statue pas dans le délai, la réclamation N'EST PAS réputée fondée d'office.
+    Le Collège n'est PAS dessaisi automatiquement.
+    → Le redevable acquiert simplement le droit d'introduire IMMÉDIATEMENT un recours judiciaire
+      devant le Tribunal de première instance, sans attendre la décision du Collège.
+  - ERREUR À NE JAMAIS COMMETTRE : écrire ou dire que "la réclamation est réputée fondée"
+    en cas de silence du Collège — cette règle N'EXISTE PAS en droit fiscal communal wallon.
 
 ÉTAPE 3 — RECOURS JUDICIAIRE (L3321-11 CDLD)
   - Juridiction compétente : Tribunal de première instance
-  - Délai : 3 MOIS à partir de la décision du collège (ou de l'expiration du délai de 6 mois)
+  - Délai : 3 MOIS à partir de la décision du collège OU à partir de l'expiration du délai
+    de 6 mois (ou 9 mois) sans décision
   - CONDITION DE RECEVABILITÉ : toute action judiciaire requiert qu'une réclamation ait
     préalablement été introduite auprès du collège (procédure préalable obligatoire)
 
@@ -401,9 +409,15 @@ PROCÉDURE EN 4 ÉTAPES :
 FORMULATION TYPE CONFORME (à utiliser dans le règlement) :
 "Les réclamations contre l'enrôlement doivent être introduites, par écrit, auprès du collège
 communal dans un délai d'un an à dater du troisième jour ouvrable suivant l'envoi de
-l'avertissement-extrait de rôle. À défaut de décision du collège dans les six mois de la
-réception de la réclamation, celle-ci est réputée fondée. Les actions judiciaires doivent être
-portées devant le tribunal de première instance dans les trois mois de la décision du collège."
+l'avertissement-extrait de rôle. Si le collège communal n'a pas statué dans les six mois de
+la réception de la réclamation, le redevable peut porter le litige devant le tribunal de
+première instance. Les actions judiciaires doivent être portées devant le tribunal de première
+instance dans les trois mois de la décision du collège."
+
+FORMULATION ERRONÉE À NE PAS UTILISER (erreur classique) :
+"À défaut de décision du collège dans les six mois, la réclamation est réputée fondée."
+→ INCORRECT : le silence du Collège ouvre le droit de recours judiciaire, mais ne rend pas
+  la réclamation fondée d'office. Le Collège conserve sa compétence et peut encore statuer.
 `;
 
 // ─── Procédure de publication (CDLD L1133-1 à L1133-3) ───────────────────────
@@ -603,9 +617,12 @@ communale."
 2. ARTICLE RÉCLAMATION — FORMULATION EXPLICITE CONFORME (recommandée pour lisibilité)
 "Les réclamations contre l'enrôlement doivent être introduites, par écrit, auprès du collège
 communal dans un délai d'un an à dater du troisième jour ouvrable suivant l'envoi de
-l'avertissement-extrait de rôle. À défaut de décision du collège dans les six mois de la
-réception de la réclamation, celle-ci est réputée fondée."
+l'avertissement-extrait de rôle. Si le collège communal n'a pas statué dans les six mois de
+la réception de la réclamation, le redevable peut porter le litige devant le tribunal de
+première instance."
 → CONFORME : délai 1 an + Collège communal (loi 20/12/2022).
+→ ATTENTION : ne pas écrire "réputée fondée" — le silence du Collège ouvre le recours
+  judiciaire mais NE rend PAS la réclamation fondée d'office (règle inexistante en droit wallon).
 
 3. ARTICLE RÉCLAMATION — FORMULATIONS NON CONFORMES (à corriger impérativement)
 "délai de 3 mois" → ERRONÉ (ancien droit pré-2023)
