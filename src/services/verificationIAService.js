@@ -145,6 +145,15 @@ Vérifie :
     system: buildSystem('coherence',
       "Cohérence interne — contradictions entre articles, lacunes exploitables, risques contentieux pratiques, comparaison avec les bonnes pratiques wallonnes."),
     userPrefix: `Analyse la COHÉRENCE INTERNE et les RISQUES PRATIQUES du règlement ci-dessous.
+
+RÈGLE FONDAMENTALE — TUTELLE (pour éviter les faux positifs) :
+La tutelle SPÉCIALE D'APPROBATION (CDLD art. L3122-2 §1er) est le régime CORRECT et NORMAL pour toute taxe communale ordinaire.
+→ Si le règlement mentionne la tutelle spéciale d'approbation pour une taxe ordinaire : c'est CONFORME, ne pas signaler comme erreur.
+→ Ne signaler une incohérence de tutelle QUE dans ces cas précis :
+   a) Le règlement est une taxe additionnelle IPP mais utilise la tutelle spéciale d'approbation (au lieu de la tutelle générale d'annulation).
+   b) Le règlement est une redevance mais cite l'art. 170 §4 (au lieu de l'art. 173 Constitution).
+   c) Le titre dit "taxe" mais tout le régime de fond est celui d'une redevance (ou inversement).
+
 Vérifie :
 1. Y a-t-il des contradictions entre les articles (ex. : titre dit "redevance" mais le texte dit "taxe") ?
 2. Y a-t-il des lacunes qui pourraient être exploitées pour contester l'imposition ?
@@ -152,7 +161,7 @@ Vérifie :
 4. L'exercice fiscal mentionné est-il encore en cours ou déjà écoulé ?
 5. Des cas non prévus créent-ils une incertitude juridique ?
 6. Le règlement abroge-t-il explicitement les dispositions antérieures si nécessaire ?
-7. Y a-t-il des incohérences entre le régime de tutelle mentionné et le type réel de règlement ?`,
+7. Incohérence de tutelle selon les règles ci-dessus uniquement — pas de signalement si la tutelle spéciale d'approbation est utilisée pour une taxe ordinaire.`,
   },
 ];
 
