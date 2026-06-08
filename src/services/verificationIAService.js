@@ -107,7 +107,10 @@ RÈGLE DE GRAVITÉ OBLIGATOIRE (3 niveaux) :
 Vérifie :
 1. Tous les visas obligatoires sont-ils présents ? (Constitution art. 41, 162, 170 §4, 172 ; CDLD L1122-30 ; Loi 24/12/1996)
 2. Les formulations sont-elles conformes aux formulations standards ?
-3. L'ordre des visas est-il correct (Constitution → Lois fédérales → Décrets → CDLD → Arrêtés) ?
+3. L'ordre des visas est-il correct selon la pratique SPW Intérieur ?
+   Ordre validé : Constitution → CDLD → Loi fédérale 24/12/1996 → Décrets sectoriels → Arrêtés.
+   Le CDLD précède la loi 24/12/1996 (contrairement à la hiérarchie abstraite lois/décrets).
+   Le décret du 14/12/2000 est intégré dans le CDLD — pas de visa séparé attendu pour lui.
 4. Y a-t-il des visas obsolètes ou erronés ?
 5. Des visas situationnels sont-ils nécessaires (RGPD, décrets sectoriels) ?`,
   },

@@ -550,8 +550,11 @@ ERREURS FRÉQUENTES DANS LES RÈGLEMENTS COMMUNAUX WALLONS
 1. VISAS
    - Art. 170 §4 absent pour une taxe (erreur la plus grave — fondement du pouvoir fiscal).
    - Art. 172 Constitution absent (principe d'égalité fiscale).
-   - Ordre incorrect des visas : l'ordre correct est Constitution → Lois fédérales → Décrets wallons
-     → CDLD → Arrêtés.
+   - Ordre incorrect des visas : l'ordre validé par la tutelle (SPW Intérieur, pratique wallex.wallonie.be)
+     est Constitution → CDLD → Loi fédérale 24/12/1996 → Décrets sectoriels thématiques → Arrêtés.
+     ATTENTION : ce n'est PAS la hiérarchie abstraite "lois avant décrets". Pour les délibérations
+     communales wallonnes, le CDLD (loi organique des communes) précède la loi 24/12/1996.
+     Le décret du 14/12/2000 est intégré dans le CDLD — il ne figure pas séparément en visa.
    - Loi 24/12/1996 absente pour une taxe recouvrée par voie de rôle.
    - Références obsolètes au CDLD (anciennes coordinations).
 

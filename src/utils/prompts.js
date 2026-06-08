@@ -110,13 +110,13 @@ PARAMÈTRES DU RÈGLEMENT :
 ${notesSousCat ? `\nEXIGENCES JURIDIQUES SPÉCIFIQUES À CETTE SOUS-CATÉGORIE :\n${notesSousCat}` : ''}
 
 
-VISAS OBLIGATOIRES (dans cet ordre) :
-1. Vu la Constitution, notamment les articles 41, 162 et 170 §4
-2. Vu le décret du 14/12/2000 et la loi du 24/06/2000 (Charte européenne de l'autonomie locale, art. 9.1)
-${p.typeReglement === 'taxe' ? "3. Vu le code des taxes assimilées aux impôts sur les revenus (CTAIR)" : "3. Vu les dispositions du CDLD relatives aux redevances communales"}
-4. Vu le CDLD, notamment les articles L1122-30${p.typeReglement === 'taxe' ? ', L3321-1 à L3321-12' : ' et L1124-40'}
-5. Vu la circulaire budgétaire du 30 mai 2024
-6. Vu l'avis de légalité du Directeur financier, positif, joint en annexe
+VISAS OBLIGATOIRES (dans cet ordre — pratique SPW Intérieur / wallex.wallonie.be) :
+1. Vu la Constitution, notamment les articles 41, 162 et 170 §4${p.typeReglement === 'redevance' ? ' et 173' : ''}
+2. Vu le Code de la démocratie locale et de la décentralisation (CDLD), notamment les articles L1122-30${p.typeReglement === 'taxe' ? ', L3321-1 à L3321-12' : ' et L1124-40'}
+3. Vu la loi du 24 décembre 1996 relative à l'établissement et au recouvrement des taxes provinciales et communales${p.typeReglement === 'taxe' ? '\n4. Vu le code des taxes assimilées aux impôts sur les revenus (CTAIR)' : ''}
+${p.typeReglement === 'taxe' ? '5.' : '4.'} Vu la circulaire budgétaire du 30 mai 2024
+${p.typeReglement === 'taxe' ? '6.' : '5.'} Vu l'avis de légalité du Directeur financier, positif, joint en annexe
+Note : le décret du 14/12/2000 est intégré dans le CDLD — ne pas le viser séparément
 
 CONSIDÉRANTS OBLIGATOIRES :
 - Nécessité de disposer de ressources propres pour financer les missions de service public
