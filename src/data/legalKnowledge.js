@@ -706,12 +706,19 @@ Déclaration : reconductible tacitement d'exercice en exercice jusqu'à révocat
 ERREURS : absence d'exonérations pour établissements publics (risque art. 172 Constitution)
 
 [TYPE : TAXE SUR LES SECONDES RÉSIDENCES]
-Visa spécifique : CWASS art. 334, 2° (Code wallon de l'Action sociale et de la Santé)
+VISAS : pas de décret wallon spécifique à citer pour ce type — les visas standards suffisent
+        (Constitution art. 170 §4, CDLD L1122-30, loi 24/12/1996).
+        ATTENTION — ERREUR CLASSIQUE : inventer un "décret wallon du 7 novembre 2001" ou tout
+        autre décret non identifié → le décret 7/11/2001 concerne l'AWEX (exportations) et
+        n'a AUCUN rapport avec la fiscalité immobilière.
+        Le CWASS art. 334, 2° apparaît DANS L'ARTICLE D'EXONÉRATION du règlement,
+        PAS comme visa en en-tête.
 Fait générateur : logement existant au 1er janvier, dont l'occupant n'est pas inscrit au registre de
                   la population ou des étrangers.
 Exclus du champ : gîtes ruraux, gîtes à la ferme, meublés de tourisme, chambres d'hôtes
 Exonération LÉGALEMENT OBLIGATOIRE (CWASS art. 334, 2°) : propriétaires hébergés en maison de repos
   ou lieu de soin, sauf si d'autres personnes occupent effectivement le bien.
+  → Citer CWASS art. 334, 2° dans l'article d'exonération, pas comme visa.
 Codébiteurs : propriétaire en cas de location ; copropriétaires en indivision ;
               usufruitier + nu-propriétaire en cas de démembrement.
 Non-cumul : si l'immeuble est aussi qualifiable d'immeuble inoccupé, seule la taxe sur les immeubles
@@ -832,7 +839,9 @@ export function getBaseForAgent(agentKey) {
         'VISAS SPÉCIFIQUES PAR TYPE — EXTRAITS DE TYPES_REGLEMENT :\n' +
         '(Art. 170 §4 = TAXE ; art. 173 = REDEVANCE — ne pas intervertir)\n' +
         'Add. IPP : CIR92 art. 465-469 + CDLD L3122-2, 7° obligatoires.\n' +
-        'Secondes résidences : CWASS art. 334, 2° obligatoire.\n' +
+        'Secondes résidences : PAS de visa décret spécifique requis (visas standards suffisent).\n' +
+        '  CWASS art. 334, 2° = article EXONÉRATIONS uniquement, PAS un visa en en-tête.\n' +
+        '  Ne jamais citer "décret 7/11/2001" (= AWEX, hors sujet) ni inventer de décret.\n' +
         'Immeubles inoccupés : décret wallon 1er oct. 2021 + CDLD L1232-1 à 32.\n' +
         'Inhumations : loi 20/07/1971 + CDLD L1232-1 à 32.\n' +
         'Terrains non bâtis : CoDT art. D.VI.64 + loi 22/12/1970 bail à ferme.\n' +
