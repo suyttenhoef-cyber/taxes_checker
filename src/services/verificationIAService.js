@@ -104,12 +104,30 @@ RÈGLE DE GRAVITÉ OBLIGATOIRE (3 niveaux) :
 - Visa PRÉSENT mais mal formulé ou dans le mauvais ordre → gravite "ameliorer"
 - Visa PRÉSENT et CORRECTEMENT FORMULÉ → gravite "conforme" (ne jamais mettre "critique" pour un visa conforme)
 
+RÈGLE ABSOLUE — VISAS CONSTITUTIONNELS TAXE vs REDEVANCE (NE PAS INTERVERTIR) :
+- TAXE    → art. 170 §4 OBLIGATOIRE + art. 172 OBLIGATOIRE (absents = critique)
+- REDEVANCE → art. 173 OBLIGATOIRE ; art. 170 §4 NON ATTENDU ; art. 172 non obligatoire
+→ Pour une REDEVANCE :
+   • Art. 173 présent = CONFORME — c'est le fondement constitutionnel CORRECT des redevances
+     (art. 173 mentionne explicitement "les redevances" dans son texte).
+   • Art. 170 §4 absent = NORMAL et CORRECT — ne pas le signaler.
+   • Art. 172 absent = NORMAL — ne pas le signaler comme erreur.
+→ Pour une TAXE :
+   • Art. 170 §4 absent = CRITIQUE.
+   • Art. 173 présent sans art. 170 §4 = erreur de qualification à signaler.
+
+RÈGLE — LOI 24/12/1996 :
+   Cette loi régit l'établissement et le recouvrement par voie de RÔLE → obligatoire pour les TAXES.
+   Pour une REDEVANCE payable au comptant (sans rôle d'imposition), son absence n'est pas une erreur critique.
+   → Ne signaler son absence comme "critique" que dans un règlement-TAXE avec enrôlement.
+
 Vérifie :
-1. Tous les visas obligatoires sont-ils présents ? (Constitution art. 41, 162, 170 §4, 172 ; CDLD L1122-30 ; Loi 24/12/1996)
+1. Tous les visas obligatoires selon le TYPE (taxe ou redevance) sont-ils présents ?
 2. Les formulations sont-elles conformes aux formulations standards ?
+   (Un visa PRÉSENT mais imparfaitement formulé = "ameliorer", jamais "critique".)
 3. L'ordre des visas est-il correct selon la pratique SPW Intérieur ?
    Ordre validé : Constitution → CDLD → Loi fédérale 24/12/1996 → Décrets sectoriels → Arrêtés.
-   Le CDLD précède la loi 24/12/1996 (contrairement à la hiérarchie abstraite lois/décrets).
+   Le CDLD précède la loi 24/12/1996.
    Le décret du 14/12/2000 est intégré dans le CDLD — pas de visa séparé attendu pour lui.
 4. Y a-t-il des visas obsolètes ou erronés ?
 5. Des visas situationnels sont-ils nécessaires (RGPD, décrets sectoriels) ?`,
@@ -127,15 +145,26 @@ RÈGLE DE GRAVITÉ OBLIGATOIRE (3 niveaux) :
 - Article PRÉSENT mais INCORRECTEMENT FORMULÉ → gravite "ameliorer"
 - Article PRÉSENT et CORRECTEMENT RÉDIGÉ → gravite "conforme" (ne jamais mettre "critique" pour un article bien rédigé)
 
+DISTINCTION CRUCIALE — REDEVANCE AU COMPTANT vs TAXE PAR RÔLE :
+Pour une REDEVANCE PAYABLE AU COMPTANT (paiement au moment de la demande ou de la prestation) :
+→ Article "Déclaration avec délai précis" (point 6) : NON REQUIS.
+   La redevance est due à la demande individuelle — il n'y a pas de procédure de déclaration préalable.
+   L'article L3321-6 CDLD et l'arrêt CE 250.321/2021 (délai déclaration) ne s'appliquent qu'aux TAXES avec rôle.
+→ Article "Taxation d'office" (point 8) : NON REQUIS.
+   Pas de rôle d'imposition pour une redevance au comptant, donc pas de taxation d'office.
+→ Article "Enrôlement" (point 7) : NON REQUIS pour une redevance au comptant — remplacé par un article de perception/paiement.
+→ Ne jamais signaler l'absence de ces 3 articles comme "critique" dans une redevance au comptant.
+→ Indices qu'une redevance est "au comptant" : "payable au comptant", "payable à la caisse", "payable au moment de la demande", montant fixe par acte administratif.
+
 Vérifie la présence et la qualité de :
 1. Article objet / matière imposable (clairement défini ?)
 2. Article redevable (précisément désigné ?)
 3. Article assiette / base imposable (univoque ?)
 4. Article taux ou tarif (montant explicite, sans renvoi à un document non adopté ?)
 5. Article exonérations (présent même si "aucune" ?)
-6. Article déclaration avec délai PRÉCIS (obligatoire pour taxation d'office — CE 250.321/2021)
-7. Article enrôlement (rôle rendu exécutoire par le collège ?)
-8. Article taxation d'office (procédure, accroissements ?)
+6. Article déclaration avec délai PRÉCIS — TAXE uniquement (obligatoire pour taxation d'office — CE 250.321/2021)
+7. Article enrôlement — TAXE uniquement (rôle rendu exécutoire par le collège ?)
+8. Article taxation d'office — TAXE uniquement (procédure, accroissements ?)
 9. Article réclamation (délai 1 AN depuis 2023, auprès du Collège communal — L3321-9 CDLD)
 10. Article transmission à la tutelle
 11. Article entrée en vigueur (5ème jour suivant publication)
@@ -167,8 +196,16 @@ La tutelle SPÉCIALE D'APPROBATION (CDLD art. L3122-2 §1er) est le régime CORR
 → Si le règlement mentionne la tutelle spéciale d'approbation pour une taxe ordinaire : c'est CONFORME, ne pas signaler comme erreur.
 → Ne signaler une incohérence de tutelle QUE dans ces cas précis :
    a) Le règlement est une taxe additionnelle IPP mais utilise la tutelle spéciale d'approbation (au lieu de la tutelle générale d'annulation).
-   b) Le règlement est une redevance mais cite l'art. 170 §4 (au lieu de l'art. 173 Constitution).
-   c) Le titre dit "taxe" mais tout le régime de fond est celui d'une redevance (ou inversement).
+   b) Le titre dit "taxe" mais tout le régime de fond est celui d'une redevance (ou inversement).
+
+RÈGLE FONDAMENTALE — VISAS CONSTITUTIONNELS (pour éviter les faux positifs) :
+Art. 173 Constitution dans un règlement-REDEVANCE = CORRECT et OBLIGATOIRE.
+Art. 173 Constitution mentionne EXPLICITEMENT les "redevances" dans son texte — c'est son fondement constitutionnel.
+→ Ne JAMAIS signaler art. 173 comme erroné ou superflu dans une redevance.
+→ Ne JAMAIS écrire qu'une redevance "ne nécessite pas de fondement constitutionnel spécifique" — art. 173 en est un.
+Art. 170 §4 absent d'une REDEVANCE = NORMAL et CORRECT (art. 170 §4 = pouvoir fiscal pour les IMPÔTS uniquement).
+→ Ne signaler l'absence d'art. 170 §4 QUE dans un règlement-TAXE.
+→ En résumé : TAXE → 170 §4 obligatoire ; REDEVANCE → 173 obligatoire. Ne jamais intervertir.
 
 Vérifie :
 1. Y a-t-il des contradictions entre les articles (ex. : titre dit "redevance" mais le texte dit "taxe") ?

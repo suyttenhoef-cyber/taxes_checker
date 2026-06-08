@@ -831,7 +831,19 @@ export function getBaseForAgent(agentKey) {
         TAXES_INTERDITES + '\n\n' + TYPES_REGLEMENT;
 
     case 'visas':
-      return 'LISTE DES VISAS OBLIGATOIRES ET RECOMMANDÉS :\n\n' +
+      return `RÈGLE FONDAMENTALE — VISAS CONSTITUTIONNELS SELON LE TYPE :
+TAXE    → Constitution art. 41, 162, 170 §4, 172  (art. 170 §4 = fondement du pouvoir fiscal IMPÔTS)
+REDEVANCE → Constitution art. 41, 162, 173          (art. 173 = fondement REDEVANCES — le texte le mentionne explicitement)
+JAMAIS intervertir 170 §4 et 173.
+→ Pour une REDEVANCE : art. 170 §4 absent = NORMAL ; art. 173 présent = CONFORME et OBLIGATOIRE.
+→ Pour une TAXE : art. 170 §4 absent = CRITIQUE ; art. 173 à la place de 170 §4 = erreur.
+
+RÈGLE — LOI 24/12/1996 :
+Obligatoire pour les TAXES recouvrées par voie de rôle (établissement et recouvrement par rôle).
+Pour une REDEVANCE payable au comptant : son absence n'est PAS une erreur critique — la redevance est recouvrée via CDLD art. L1124-40, pas les art. L3321-1 à 12.
+→ Ne signaler son absence comme "critique" que dans un règlement-TAXE avec enrôlement.
+
+LISTE DES VISAS PAR CONTEXTE :\n\n` +
         [...VISAS_OBLIGATOIRES, ...VISAS_SITUATIONNELS].map(v =>
           `[${v.obligatoire !== false ? 'OBLIGATOIRE' : 'RECOMMANDÉ'}] ${v.reference}\n` +
           `Formulation standard : "${v.formulation || '(variable selon contexte)'}"\n` +
