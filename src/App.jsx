@@ -6,59 +6,57 @@ import { REFS } from './data/refs.js';
 import { chargerProfil, sauverProfil, mergerBiblio, sauvegarderLocale } from './services/storageService.js';
 import { getMandataires } from './services/odwbService.js';
 import { qualifierTexteIA, genererReglementStream } from './services/openaiService.js';
-import { trouverRefs, verifier } from './utils/verification.js';
+import { trouverRefs } from './utils/verification.js';
 import { buildMessages } from './utils/prompts.js';
 import CommuneAutocomplete from './components/CommuneAutocomplete.jsx';
 import CarteMandataires    from './components/CarteMandataires.jsx';
 import PanelPresences      from './components/PanelPresences.jsx';
-import RegleResultat       from './components/RegleResultat.jsx';
-import FormulaireEntree    from './components/FormulaireEntree.jsx';
 import OngletBibliotheque  from './components/OngletBibliotheque.jsx';
-import OngletDocuments     from './components/OngletDocuments.jsx';
-import OngletDashboard     from './components/OngletDashboard.jsx';
-import OngletSignatures    from './components/OngletSignatures.jsx';
 import OngletVerifier      from './components/OngletVerifier.jsx';
 import PanelProfil         from './components/PanelProfil.jsx';
-import SignaturePanel      from './components/SignaturePanel.jsx';
 
 const SOURCE = (() => {
   try { return Array.isArray(INDEX) && INDEX.length > 0 ? INDEX : REFS; }
   catch { return REFS; }
 })();
 
-const COUL_GRAV  = { erreur: '#DC2626', avertissement: '#D97706', info: '#1A3A5C' };
-const LABEL_GRAV = { erreur: '❌ Erreurs bloquantes', avertissement: '⚠️ Avertissements', info: 'ℹ️ Bonnes pratiques' };
+const SIDEBAR_BG = '#0D1B35';
+const TEAL       = '#17B8B5';
+
+const NAV_ITEMS = [
+  { key: 'accueil',      icon: '🏠', label: 'Accueil' },
+  { key: 'generer',      icon: '✏️', label: 'Nouveau règlement' },
+  { key: 'verifier',     icon: '🔍', label: 'Analyser un règlement' },
+  { key: 'bibliotheque', icon: '📚', label: 'Bibliothèque' },
+];
 
 export default function App() {
-  const [onglet,          setOnglet]   = useState('accueil');
-  const [biblio,          setBiblio]   = useState(() => mergerBiblio(SOURCE));
-  const [params,          setParams]   = useState(() => {
+  const [onglet,       setOnglet]     = useState('accueil');
+  const [biblio,       setBiblio]     = useState(() => mergerBiblio(SOURCE));
+  const [params,       setParams]     = useState(() => {
     const pr = chargerProfil();
     return {
       commune: pr.nomCommune || '', ins: pr.ins || '', cp: '', province: pr.province || '',
       arrondissement: pr.arrondissement || '', population: null, nomCourt: '', adresse: '',
       emailGeneral: '', telephone: '', typeReglement: 'taxe', sousTypeRedevance: 'autorisation',
-      categorie: '', sousCat: '', objet: '', dateSeance: '',
+      categorie: '', sousCat: '', objet: '',
       periodeDebut: String(new Date().getFullYear() + 1),
       periodeFin:   String(new Date().getFullYear() + 6),
       redevable: '', tarif: '', exonerations: '', infoCompl: '',
     };
   });
-  const [mandataires,   setMandataires]   = useState([]);
-  const [mandLoading,   setMandLoading]   = useState(false);
-  const [presences,     setPresences]     = useState({});
-  const [texteGenere,   setTexteGenere]   = useState('');
-  const [texteVerif,    setTexteVerif]    = useState('');
-  const [resultatsVerif,setResultatsVerif]= useState(null);
-  const [loading,       setLoading]       = useState(false);
-  const [erreur,        setErreur]        = useState('');
-  const [etapeGen,      setEtapeGen]      = useState('formulaire');
-  const [profil,        setProfil]        = useState(() => chargerProfil());
-  const [showProfil,    setShowProfil]    = useState(false);
-  const [texteLibre,    setTexteLibre]    = useState('');
-  const [qualifBusy,    setQualifBusy]    = useState(false);
-  const [qualifMsg,     setQualifMsg]     = useState(null);
-  const [docxBlob,      setDocxBlob]      = useState(null);
+  const [mandataires,  setMandataires]  = useState([]);
+  const [mandLoading,  setMandLoading]  = useState(false);
+  const [presences,    setPresences]    = useState({});
+  const [texteGenere,  setTexteGenere]  = useState('');
+  const [loading,      setLoading]      = useState(false);
+  const [erreur,       setErreur]       = useState('');
+  const [etapeGen,     setEtapeGen]     = useState('formulaire');
+  const [profil,       setProfil]       = useState(() => chargerProfil());
+  const [showProfil,   setShowProfil]   = useState(false);
+  const [texteLibre,   setTexteLibre]   = useState('');
+  const [qualifBusy,   setQualifBusy]   = useState(false);
+  const [qualifMsg,    setQualifMsg]    = useState(null);
   const streamRef = useRef('');
 
   const upd = (k, v) => setParams(p => ({ ...p, [k]: v }));
@@ -114,7 +112,7 @@ export default function App() {
     ).join('\n');
     try {
       const q = await qualifierTexteIA(texteLibre, catList);
-      const catOk    = CATEGORIES.find(c => c.slug === q.categorie);
+      const catOk     = CATEGORIES.find(c => c.slug === q.categorie);
       const sousCatOk = catOk?.sous?.find(s => s.slug === q.sousCat);
       setParams(p => ({
         ...p,
@@ -127,8 +125,8 @@ export default function App() {
         tarif:      q.tarif       || p.tarif,
         exonerations: q.exonerations || p.exonerations,
       }));
-      const typeLabel   = q.typeReglement === 'taxe' ? 'Règlement-taxe' : 'Règlement-redevance';
-      const catLabel    = catOk?.label || q.categorie;
+      const typeLabel    = q.typeReglement === 'taxe' ? 'Règlement-taxe' : 'Règlement-redevance';
+      const catLabel     = catOk?.label || q.categorie;
       const sousCatLabel = sousCatOk?.label || '';
       setQualifMsg({ ok: true, texte: `${typeLabel} · ${catLabel}${sousCatLabel ? ' — ' + sousCatLabel : ''}`, explication: q.explication || '' });
     } catch (e) {
@@ -140,37 +138,17 @@ export default function App() {
     try {
       const { exportDocx } = await import('./exportDocx.js');
       const blob = await exportDocx({ texteGenere, params, profil });
-      setDocxBlob(blob);
+      if (blob instanceof Blob) {
+        const url = URL.createObjectURL(blob);
+        const a = Object.assign(document.createElement('a'), {
+          href: url,
+          download: `reglement-${(params.commune || 'commune').toLowerCase().replace(/\s+/g, '-')}.docx`,
+        });
+        document.body.appendChild(a); a.click();
+        document.body.removeChild(a); URL.revokeObjectURL(url);
+      }
     } catch (e) { setErreur(`Export Word impossible : ${e.message}`); }
   };
-
-  const handleSigne = ({ blob, dossierId }) => {
-    const entry = {
-      id: `local-${Date.now()}`, commune: params.commune || '', type: params.typeReglement,
-      categorie: params.categorie, sousCat: params.sousCat || '',
-      annee: Number(params.periodeDebut) || new Date().getFullYear(),
-      periode: `${params.periodeDebut}–${params.periodeFin}`, objet: params.objet,
-      mots_cles: [], visas: [], tarifs: params.tarif,
-      exonerations: params.exonerations ? [params.exonerations] : [],
-      points_forts: [], extrait: texteGenere.slice(0, 500),
-      source: { numero_deliberation: '', date_seance: params.dateSeance || '' },
-      qualite: 'reference', points_forts_valides: true, _local: true,
-      signature: { statut: 'signe', esignflow_dossier_id: dossierId, date_signature: new Date().toISOString() },
-    };
-    setBiblio(prev => { const next = [entry, ...prev]; sauvegarderLocale(next.filter(x => x._local)); return next; });
-  };
-
-  const lancerVerif = () => {
-    if (!texteVerif.trim()) { setErreur('Collez un texte à analyser.'); return; }
-    setErreur(''); setResultatsVerif(verifier(texteVerif));
-  };
-
-  const stats = resultatsVerif ? {
-    ok:   resultatsVerif.filter(r => r.statut === 'ok').length,
-    err:  resultatsVerif.filter(r => r.statut === 'echec' && r.gravite === 'erreur').length,
-    warn: resultatsVerif.filter(r => r.statut === 'echec' && r.gravite === 'avertissement').length,
-    man:  resultatsVerif.filter(r => r.statut === 'manuel').length,
-  } : null;
 
   const SLUG_COMPAT = { 'immondices': 'dechets-environnement' };
   const catNorm = c => SLUG_COMPAT[c] || c;
@@ -180,88 +158,172 @@ export default function App() {
     r.qualite !== 'insuffisante' && r.qualite !== 'brouillon'
   ).length;
 
-  const ONGLETS = [
-    ['accueil',      '🏠 Accueil',       false],
-    ['generer',      '✏️ Règlements',    false],
-    ['documents',    '📋 Séance',        false],
-    ['signatures',   '✍️ Signatures',    false],
-    ['verifier',     '✅ Vérifier',      false],
-    ['bibliotheque', '📚 Bibliothèque',  false],
-  ];
+  const navigate = key => { setOnglet(key); setErreur(''); };
 
   return (
-    <div className="font-[Segoe_UI,Arial,sans-serif] bg-vb-gris-clair min-h-screen">
-      {showProfil && <PanelProfil profil={profil} onSave={setProfil} onClose={() => setShowProfil(false)} />}
+    <div className="flex min-h-screen" style={{ fontFamily: 'Segoe UI, Arial, sans-serif' }}>
 
-      {/* Header */}
-      <div className="bg-vb-bleu text-white px-6 py-3.5 flex items-center gap-3">
-        <div className="bg-vb-orange rounded-lg w-9 h-9 flex items-center justify-center font-bold text-[18px]">VB</div>
-        <div className="flex-1">
-          <div className="font-bold text-[16px]">Assistant règlements — Taxes & redevances</div>
-          <div className="text-[12px] opacity-75">Outil de génération IAConnect</div>
+      {showProfil && (
+        <PanelProfil profil={profil} onSave={setProfil} onClose={() => setShowProfil(false)} />
+      )}
+
+      {/* ═══ SIDEBAR ═══ */}
+      <aside style={{ background: SIDEBAR_BG, width: 240 }}
+        className="text-white flex flex-col min-h-screen fixed left-0 top-0 z-40">
+
+        {/* Logo */}
+        <div className="px-5 pt-6 pb-5">
+          <div className="flex items-center gap-3">
+            <div className="bg-vb-orange rounded-xl w-10 h-10 flex items-center justify-center font-bold text-lg flex-shrink-0 select-none">VB</div>
+            <div>
+              <div className="font-bold text-[15px] leading-tight text-white">Tax Checker</div>
+              <div className="text-[11px] mt-0.5" style={{ color: 'rgba(255,255,255,0.4)' }}>Vanden Broele</div>
+            </div>
+          </div>
         </div>
-        <button
-          onClick={() => setShowProfil(true)}
-          className="bg-white/15 text-white border border-white/30 rounded-lg px-3.5 py-1.5 text-[12px] font-semibold cursor-pointer whitespace-nowrap"
-        >
-          ⚙️ {profil.nomCommune || 'Profil commune'}
-        </button>
-      </div>
 
-      {/* Onglets */}
-      <div className="bg-white border-b-2 border-vb-border flex px-6">
-        {ONGLETS.map(([k, l, disabled]) => (
-          <button key={k}
-            onClick={() => { if (!disabled) { setOnglet(k); setErreur(''); } }}
-            className={`px-5 py-3 border-none bg-transparent font-semibold text-[14px] -mb-0.5 transition-colors
-              ${disabled ? 'text-vb-border cursor-not-allowed opacity-40' : 'cursor-pointer'}
-              ${!disabled && onglet === k ? 'text-vb-orange border-b-[3px] border-vb-orange' : ''}
-              ${!disabled && onglet !== k ? 'text-vb-gris hover:text-vb-bleu' : ''}`}
-          >
-            {l}
+        {/* Navigation */}
+        <nav className="flex-1 px-3 space-y-0.5">
+          {NAV_ITEMS.map(({ key, icon, label }) => (
+            <button key={key} onClick={() => navigate(key)}
+              style={onglet === key ? { background: TEAL } : {}}
+              className={`w-full flex items-center gap-3 px-4 py-[10px] rounded-xl text-[13px] font-semibold text-left transition-all border-0
+                ${onglet === key ? 'text-white shadow-sm' : 'text-white/55 hover:text-white/90 hover:bg-white/[0.07]'}`}>
+              <span className="text-[15px] w-5 text-center shrink-0">{icon}</span>
+              <span className="leading-tight">{label}</span>
+            </button>
+          ))}
+        </nav>
+
+        {/* Séparateur */}
+        <div className="mx-5 my-3" style={{ borderTop: '1px solid rgba(255,255,255,0.08)' }} />
+
+        {/* Profil commune */}
+        <div className="px-3 pb-5">
+          <button onClick={() => setShowProfil(true)}
+            className="w-full flex items-center gap-3 px-4 py-3 rounded-xl text-left transition-all hover:bg-white/[0.07] border-0">
+            <div className="w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0 font-bold text-sm"
+              style={{ background: 'rgba(232,119,34,0.2)', color: '#E87722' }}>
+              {profil.nomCommune ? profil.nomCommune.charAt(0).toUpperCase() : '?'}
+            </div>
+            <div className="flex-1 min-w-0">
+              <div className="text-[12px] font-semibold truncate" style={{ color: 'rgba(255,255,255,0.75)' }}>
+                {profil.nomCommune || 'Configurer commune'}
+              </div>
+              <div className="text-[10px]" style={{ color: 'rgba(255,255,255,0.35)' }}>Profil commune · ⚙</div>
+            </div>
           </button>
-        ))}
-      </div>
+        </div>
+      </aside>
 
-      <div className="px-6 py-6 max-w-[900px] mx-auto">
+      {/* ═══ CONTENU PRINCIPAL ═══ */}
+      <main style={{ marginLeft: 240, background: '#EFF2F7' }} className="flex-1 min-h-screen flex flex-col">
 
-        {/* ═══ RÉDIGER ═══ */}
+        {/* ─── ACCUEIL ─── */}
+        {onglet === 'accueil' && (
+          <div className="p-8 flex-1">
+            <div className="mb-8">
+              <h1 className="text-[26px] font-bold text-vb-bleu leading-tight">
+                {profil.nomCommune ? `Commune de ${profil.nomCommune}` : 'Bienvenue sur Tax Checker'}
+              </h1>
+              <p className="text-vb-gris text-[14px] mt-2 max-w-lg leading-relaxed">
+                Assistance à la rédaction et à la vérification de règlements-taxes et redevances communaux wallons.
+              </p>
+            </div>
+
+            {/* 2 actions principales */}
+            <div className="grid grid-cols-2 gap-5 mb-8" style={{ maxWidth: 680 }}>
+              <button onClick={() => navigate('generer')}
+                className="bg-white rounded-2xl p-7 text-left border-2 border-transparent transition-all hover:shadow-md cursor-pointer group"
+                style={{ borderColor: 'transparent' }}
+                onMouseEnter={e => e.currentTarget.style.borderColor = TEAL}
+                onMouseLeave={e => e.currentTarget.style.borderColor = 'transparent'}>
+                <div className="w-12 h-12 rounded-xl flex items-center justify-center text-xl mb-4 transition-colors"
+                  style={{ background: 'rgba(23,184,181,0.1)' }}>✏️</div>
+                <h3 className="font-bold text-[17px] text-vb-bleu mb-1.5">Nouveau règlement</h3>
+                <p className="text-vb-gris text-[13px] leading-relaxed mb-4">
+                  Générez un règlement-taxe ou une redevance adapté à votre commune avec l'assistance de l'IA.
+                </p>
+                <span className="text-[13px] font-semibold" style={{ color: TEAL }}>Commencer →</span>
+              </button>
+
+              <button onClick={() => navigate('verifier')}
+                className="bg-white rounded-2xl p-7 text-left border-2 border-transparent transition-all hover:shadow-md cursor-pointer"
+                onMouseEnter={e => e.currentTarget.style.borderColor = '#E87722'}
+                onMouseLeave={e => e.currentTarget.style.borderColor = 'transparent'}>
+                <div className="w-12 h-12 rounded-xl flex items-center justify-center text-xl mb-4 bg-vb-orange-light">🔍</div>
+                <h3 className="font-bold text-[17px] text-vb-bleu mb-1.5">Analyser un règlement</h3>
+                <p className="text-vb-gris text-[13px] leading-relaxed mb-4">
+                  Vérifiez la conformité juridique d'un règlement existant grâce à 5 agents IA spécialisés.
+                </p>
+                <span className="text-vb-orange text-[13px] font-semibold">Analyser →</span>
+              </button>
+            </div>
+
+            {/* Stats rapides */}
+            <div className="grid grid-cols-3 gap-4" style={{ maxWidth: 680 }}>
+              {[
+                { val: biblio.filter(b => b._local).length,  label: 'Règlements locaux',    color: TEAL },
+                { val: biblio.filter(b => !b._local).length, label: 'Modèles de référence', color: '#1A3A5C' },
+                { val: 5,                                     label: 'Agents d\'analyse IA', color: '#E87722' },
+              ].map(({ val, label, color }) => (
+                <div key={label} className="bg-white rounded-xl p-5 border border-vb-border">
+                  <div className="text-[28px] font-bold" style={{ color }}>{val}</div>
+                  <div className="text-[12px] text-vb-gris mt-0.5">{label}</div>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {/* ─── NOUVEAU RÈGLEMENT ─── */}
         {onglet === 'generer' && (
-          <>
+          <div className="p-8" style={{ maxWidth: 900 }}>
+            <div className="mb-6">
+              <h2 className="text-[20px] font-bold text-vb-bleu">Nouveau règlement</h2>
+              <p className="text-vb-gris text-[13px] mt-1">
+                Décrivez librement ou remplissez le formulaire — l'IA génère le règlement complet.
+              </p>
+            </div>
+
             {/* Assistant qualification */}
-            <div className="rounded-xl p-5 mb-5 text-white" style={{ background: 'linear-gradient(135deg,#1A3A5C 0%,#2A5A8C 100%)' }}>
-              <div className="font-bold text-[15px] mb-1">✨ Assistant de qualification</div>
-              <div className="text-[12px] opacity-80 mb-3.5">Décrivez librement ce que vous souhaitez taxer — l'IA remplit le formulaire automatiquement.</div>
+            <div className="rounded-2xl p-6 mb-5 text-white" style={{ background: 'linear-gradient(135deg,#1A3A5C 0%,#2A5A8C 100%)' }}>
+              <div className="font-bold text-[14px] mb-1">✨ Assistant de qualification</div>
+              <div className="text-[12px] mb-3" style={{ opacity: 0.75 }}>
+                Décrivez librement ce que vous souhaitez taxer — l'IA remplit le formulaire automatiquement.
+              </div>
               <div className="flex gap-2.5 items-start">
                 <textarea
                   value={texteLibre} onChange={e => setTexteLibre(e.target.value)}
                   onKeyDown={e => { if (e.key === 'Enter' && (e.ctrlKey || e.metaKey)) qualifier(); }}
                   placeholder="ex. : occupation du domaine public par une terrasse horeca, taxe sur les secondes résidences…"
                   rows={2}
-                  className="flex-1 px-3 py-2 rounded-lg border border-white/30 bg-white/12 text-white text-[13px] resize-none outline-none placeholder:text-white/50"
-                  style={{ fontFamily: 'inherit', backgroundColor: 'rgba(255,255,255,0.12)' }}
+                  className="flex-1 px-3 py-2 rounded-xl text-white text-[13px] resize-none outline-none"
+                  style={{ fontFamily: 'inherit', background: 'rgba(255,255,255,0.1)', border: '1px solid rgba(255,255,255,0.2)' }}
                 />
                 <button onClick={qualifier} disabled={qualifBusy || !texteLibre.trim()}
-                  className="vb-btn bg-vb-orange text-white px-4 py-2 whitespace-nowrap min-w-[110px] disabled:bg-vb-gris">
+                  className="vb-btn bg-vb-orange text-white px-4 py-2 whitespace-nowrap min-w-[110px]">
                   {qualifBusy ? '⏳ Analyse…' : 'Qualifier →'}
                 </button>
               </div>
-              <div className="text-[11px] opacity-55 mt-1.5">Ctrl+Entrée pour soumettre</div>
+              <div className="text-[11px] mt-1.5" style={{ opacity: 0.5 }}>Ctrl+Entrée pour soumettre</div>
               {qualifMsg && (
-                <div className={`mt-3 px-3.5 py-2.5 rounded-lg flex gap-2.5 items-start border ${qualifMsg.ok ? 'bg-white/15 border-white/30' : 'bg-vb-rouge/30 border-vb-rouge/50'}`}>
+                <div className={`mt-3 px-3.5 py-2.5 rounded-xl flex gap-2.5 items-start`}
+                  style={{ background: qualifMsg.ok ? 'rgba(255,255,255,0.12)' : 'rgba(220,38,38,0.25)', border: `1px solid ${qualifMsg.ok ? 'rgba(255,255,255,0.25)' : 'rgba(220,38,38,0.5)'}` }}>
                   <span className="text-[16px] leading-none">{qualifMsg.ok ? '✅' : '❌'}</span>
                   <div className="flex-1">
                     <div className="font-bold text-[13px]">{qualifMsg.texte}</div>
-                    {qualifMsg.explication && <div className="text-[12px] opacity-85 mt-0.5">{qualifMsg.explication}</div>}
+                    {qualifMsg.explication && <div className="text-[12px] mt-0.5" style={{ opacity: 0.8 }}>{qualifMsg.explication}</div>}
                   </div>
-                  <button onClick={() => setQualifMsg(null)} className="text-white opacity-60 cursor-pointer bg-transparent border-none text-[16px] leading-none p-0">×</button>
+                  <button onClick={() => setQualifMsg(null)}
+                    className="text-white cursor-pointer bg-transparent border-none text-[18px] leading-none p-0" style={{ opacity: 0.5 }}>×</button>
                 </div>
               )}
             </div>
 
-            {/* Formulaire paramètres */}
+            {/* Formulaire */}
             <div className="vb-card mb-5">
-              <h3 className="text-vb-bleu mt-0 text-[16px] font-bold mb-4">Paramètres du règlement</h3>
+              <h3 className="text-vb-bleu mt-0 text-[15px] font-bold mb-4">Paramètres du règlement</h3>
               <div className="grid grid-cols-2 gap-4">
 
                 <div className="col-span-2">
@@ -269,10 +331,10 @@ export default function App() {
                   <CommuneAutocomplete value={params.commune} onChange={v => upd('commune', v)} onSelect={pickCommune} />
                   {(params.ins || params.province) && (
                     <div className="flex gap-2 mt-1.5 flex-wrap">
-                      {params.ins          && <span className="vb-badge bg-vb-bleu-light text-vb-bleu font-bold">INS {params.ins}</span>}
-                      {params.cp           && <span className="vb-badge bg-vb-gris-clair text-vb-gris">CP {params.cp}</span>}
+                      {params.ins            && <span className="vb-badge bg-vb-bleu-light text-vb-bleu font-bold">INS {params.ins}</span>}
+                      {params.cp             && <span className="vb-badge bg-vb-gris-clair text-vb-gris">CP {params.cp}</span>}
                       {params.arrondissement && <span className="vb-badge bg-vb-gris-clair text-vb-gris">{params.arrondissement}</span>}
-                      {params.province     && <span className="vb-badge bg-vb-gris-clair text-vb-gris">Prov. {params.province}</span>}
+                      {params.province       && <span className="vb-badge bg-vb-gris-clair text-vb-gris">Prov. {params.province}</span>}
                     </div>
                   )}
                   <CarteMandataires data={mandataires} loading={mandLoading} commune={params.commune} />
@@ -281,7 +343,8 @@ export default function App() {
 
                 <div className="col-span-2">
                   <label className="vb-label">Catégorie <span className="text-vb-rouge">*</span></label>
-                  <select className="vb-input" value={params.categorie} onChange={e => { upd('categorie', e.target.value); upd('sousCat', ''); }}>
+                  <select className="vb-input" value={params.categorie}
+                    onChange={e => { upd('categorie', e.target.value); upd('sousCat', ''); }}>
                     <option value="">— Sélectionner une catégorie —</option>
                     {CATEGORIES.map(c => <option key={c.slug} value={c.slug}>{c.label}</option>)}
                   </select>
@@ -291,7 +354,7 @@ export default function App() {
                   <div className="col-span-2">
                     <label className="vb-label">Sous-catégorie</label>
                     <select className="vb-input" value={params.sousCat} onChange={e => upd('sousCat', e.target.value)}>
-                      <option value="">— Préciser la sous-catégorie (recommandé) —</option>
+                      <option value="">— Préciser (recommandé) —</option>
                       {(CATEGORIES.find(c => c.slug === params.categorie)?.sous || []).map(s => (
                         <option key={s.slug} value={s.slug}>{s.label}</option>
                       ))}
@@ -299,7 +362,7 @@ export default function App() {
                     <div className="mt-1 text-[11px] text-vb-gris">
                       📚 {nbRefs} règlement(s) de référence disponible(s)
                       {params.sousCat && NOTES_SOUS_CAT[params.sousCat] && (
-                        <span className="ml-2 text-vb-orange font-bold">⚡ Exigences juridiques spécifiques disponibles</span>
+                        <span className="ml-2 text-vb-orange font-bold">⚡ Exigences juridiques spécifiques</span>
                       )}
                     </div>
                   </div>
@@ -317,51 +380,60 @@ export default function App() {
                   <div>
                     <label className="vb-label">Sous-type de redevance</label>
                     <select className="vb-input" value={params.sousTypeRedevance} onChange={e => upd('sousTypeRedevance', e.target.value)}>
-                      <option value="autorisation">Autorisation d'occupation (terrasse, enseigne…)</option>
-                      <option value="service">Service rendu / usage (déchets, documents admin…)</option>
+                      <option value="autorisation">Autorisation d'occupation</option>
+                      <option value="service">Service rendu / usage</option>
                     </select>
                   </div>
                 )}
 
                 <div className="flex gap-2">
                   <div className="flex-1">
-                    <label className="vb-label">Date de séance</label>
-                    <input type="date" className="vb-input" value={params.dateSeance} onChange={e => upd('dateSeance', e.target.value)} />
+                    <label className="vb-label">Exercice début</label>
+                    <input className="vb-input" value={params.periodeDebut} onChange={e => upd('periodeDebut', e.target.value)} />
                   </div>
-                </div>
-
-                <div className="flex gap-2">
-                  <div className="flex-1"><label className="vb-label">Exercice début</label><input className="vb-input" value={params.periodeDebut} onChange={e => upd('periodeDebut', e.target.value)} /></div>
-                  <div className="flex-1"><label className="vb-label">Exercice fin</label><input className="vb-input" value={params.periodeFin} onChange={e => upd('periodeFin', e.target.value)} /></div>
+                  <div className="flex-1">
+                    <label className="vb-label">Exercice fin</label>
+                    <input className="vb-input" value={params.periodeFin} onChange={e => upd('periodeFin', e.target.value)} />
+                  </div>
                 </div>
 
                 <div className="col-span-2">
                   <label className="vb-label">Objet du règlement <span className="text-vb-rouge">*</span></label>
-                  <input className="vb-input" placeholder="ex. : délivrance de documents administratifs…" value={params.objet} onChange={e => upd('objet', e.target.value)} />
+                  <input className="vb-input" placeholder="ex. : délivrance de documents administratifs…"
+                    value={params.objet} onChange={e => upd('objet', e.target.value)} />
                 </div>
                 <div className="col-span-2">
                   <label className="vb-label">Redevable (qui paie ?) <span className="text-vb-rouge">*</span></label>
-                  <input className="vb-input" placeholder="ex. : toute personne physique ou morale qui sollicite…" value={params.redevable} onChange={e => upd('redevable', e.target.value)} />
+                  <input className="vb-input" placeholder="ex. : toute personne physique ou morale qui sollicite…"
+                    value={params.redevable} onChange={e => upd('redevable', e.target.value)} />
                 </div>
                 <div className="col-span-2">
                   <label className="vb-label">Tarif / montant <span className="text-vb-rouge">*</span></label>
-                  <input className="vb-input" placeholder="ex. : 5 € par acte" value={params.tarif} onChange={e => upd('tarif', e.target.value)} />
+                  <input className="vb-input" placeholder="ex. : 5 € par acte"
+                    value={params.tarif} onChange={e => upd('tarif', e.target.value)} />
                 </div>
                 <div>
                   <label className="vb-label">Exonérations</label>
-                  <input className="vb-input" placeholder="ex. : actes délivrés aux services publics…" value={params.exonerations} onChange={e => upd('exonerations', e.target.value)} />
+                  <input className="vb-input" placeholder="ex. : actes délivrés aux services publics…"
+                    value={params.exonerations} onChange={e => upd('exonerations', e.target.value)} />
                 </div>
                 <div>
                   <label className="vb-label">Informations complémentaires</label>
-                  <input className="vb-input" placeholder="particularités locales…" value={params.infoCompl} onChange={e => upd('infoCompl', e.target.value)} />
+                  <input className="vb-input" placeholder="particularités locales…"
+                    value={params.infoCompl} onChange={e => upd('infoCompl', e.target.value)} />
                 </div>
               </div>
 
-              {erreur && <div className="mt-3 px-3.5 py-2.5 bg-vb-rouge-clair border border-vb-rouge rounded-md text-vb-rouge text-[13px]">{erreur}</div>}
+              {erreur && (
+                <div className="mt-3 px-3.5 py-2.5 bg-vb-rouge-clair border border-vb-rouge rounded-xl text-vb-rouge text-[13px]">
+                  {erreur}
+                </div>
+              )}
 
               <div className="mt-5 flex gap-3 items-center flex-wrap">
                 <button onClick={generer} disabled={loading}
-                  className="vb-btn bg-vb-orange text-white px-7 py-3 text-[14px] disabled:bg-vb-gris">
+                  className="vb-btn text-white px-7 py-3 text-[14px]"
+                  style={{ background: loading ? '#9CA3AF' : TEAL }}>
                   {loading ? '⏳ Génération…' : '✏️ Générer le règlement'}
                 </button>
                 <span className="text-[12px] text-vb-gris">⚠️ Validation juriste obligatoire avant adoption.</span>
@@ -372,83 +444,74 @@ export default function App() {
             {texteGenere && (
               <div className="vb-card">
                 <div className="flex justify-between items-center mb-4 flex-wrap gap-2">
-                  <h3 className="text-vb-bleu m-0 text-[16px] font-bold">📄 Règlement généré</h3>
+                  <h3 className="text-vb-bleu m-0 text-[15px] font-bold">📄 Règlement généré</h3>
                   <div className="flex gap-2">
                     {etapeGen === 'resultat' && (
-                      <button onClick={() => { setTexteVerif(texteGenere); setOnglet('verifier'); setResultatsVerif(null); }}
-                        className="bg-vb-bleu-light text-vb-bleu border border-vb-bleu rounded-md px-3.5 py-1.5 text-[12px] font-semibold cursor-pointer">
-                        ✅ Vérifier
+                      <button onClick={() => navigate('verifier')}
+                        className="border rounded-lg px-3.5 py-1.5 text-[12px] font-semibold cursor-pointer bg-vb-bleu-light text-vb-bleu border-vb-bleu">
+                        🔍 Analyser
                       </button>
                     )}
                     {etapeGen === 'resultat' && (
                       <button onClick={handleExportDocx}
-                        className="bg-vb-vert-clair text-vb-vert border border-vb-vert rounded-md px-3.5 py-1.5 text-[12px] font-semibold cursor-pointer">
+                        className="border rounded-lg px-3.5 py-1.5 text-[12px] font-semibold cursor-pointer bg-vb-vert-clair text-vb-vert border-vb-vert">
                         ⬇ Word
                       </button>
                     )}
                     <button onClick={() => navigator.clipboard.writeText(texteGenere)}
-                      className="bg-vb-gris-clair text-vb-gris border border-vb-border rounded-md px-3.5 py-1.5 text-[12px] cursor-pointer">
+                      className="border rounded-lg px-3.5 py-1.5 text-[12px] cursor-pointer bg-vb-gris-clair text-vb-gris border-vb-border">
                       📋 Copier
                     </button>
                   </div>
                 </div>
-                <pre className="whitespace-pre-wrap text-[13px] leading-[1.7] bg-gray-50 p-5 rounded-md border border-vb-border max-h-[520px] overflow-y-auto"
+                <pre className="whitespace-pre-wrap text-[13px] leading-[1.7] bg-gray-50 p-5 rounded-xl border border-vb-border max-h-[520px] overflow-y-auto"
                   style={{ fontFamily: 'Georgia, serif' }}>
                   {texteGenere}{loading && <span className="text-vb-orange">▌</span>}
                 </pre>
                 {etapeGen === 'resultat' && (
-                  <div className="mt-3 px-3.5 py-2.5 bg-vb-jaune-clair border border-vb-jaune rounded-md text-[12px] text-vb-jaune">
+                  <div className="mt-3 px-3.5 py-2.5 bg-vb-jaune-clair border border-vb-jaune rounded-xl text-[12px] text-vb-jaune">
                     ⚠️ <strong>Rappel :</strong> Aide à la rédaction uniquement. Validation obligatoire par un juriste avant adoption.
                   </div>
                 )}
               </div>
             )}
-
-            {/* Signature inline après export Word */}
-            {docxBlob && etapeGen === 'resultat' && (
-              <SignaturePanel
-                docxBlob={docxBlob}
-                params={params}
-                profil={profil}
-                onSigne={handleSigne}
-                docLabel={params.objet ? `Règlement — ${params.objet}` : 'Règlement'}
-                docType="reglement"
-              />
-            )}
-          </>
+          </div>
         )}
 
-        {/* ═══ ACCUEIL ═══ */}
-        {onglet === 'accueil' && (
-          <OngletDashboard profil={profil} biblio={biblio} onNavigate={tab => setOnglet(tab)} />
-        )}
-
-        {/* ═══ SÉANCE ═══ */}
-        {onglet === 'documents' && (
-          <OngletDocuments profil={profil} />
-        )}
-
-        {/* ═══ VÉRIFIER ═══ */}
+        {/* ─── ANALYSER UN RÈGLEMENT ─── */}
         {onglet === 'verifier' && (
-          <OngletVerifier texteInitial={texteGenere} />
+          <div className="p-8 flex-1">
+            <div className="mb-6">
+              <h2 className="text-[20px] font-bold text-vb-bleu">Analyser un règlement existant</h2>
+              <p className="text-vb-gris text-[13px] mt-1">
+                5 agents IA analysent votre règlement en parallèle et produisent un rapport de conformité détaillé.
+              </p>
+            </div>
+            <OngletVerifier texteInitial={texteGenere} />
+          </div>
         )}
 
-        {/* ═══ SIGNATURES ═══ */}
-        {onglet === 'signatures' && (
-          <OngletSignatures />
-        )}
-
-        {/* ═══ BIBLIOTHÈQUE ═══ */}
+        {/* ─── BIBLIOTHÈQUE ─── */}
         {onglet === 'bibliotheque' && (
-          <OngletBibliotheque biblio={biblio} setBiblio={setBiblio} />
+          <div className="p-8 flex-1">
+            <div className="mb-6">
+              <h2 className="text-[20px] font-bold text-vb-bleu">Bibliothèque de modèles</h2>
+              <p className="text-vb-gris text-[13px] mt-1">
+                Règlements de référence Vanden Broele et vos règlements locaux sauvegardés.
+              </p>
+            </div>
+            <OngletBibliotheque biblio={biblio} setBiblio={setBiblio} />
+          </div>
         )}
 
-        <div className="mt-6 bg-vb-bleu-light rounded-xl border border-vb-bleu/20 px-4 py-3.5">
+        {/* Footer */}
+        <div className="px-8 py-4 mt-auto" style={{ borderTop: '1px solid #E5E7EB' }}>
           <div className="text-[11px] text-vb-gris">
-            Données : <a href="https://www.odwb.be" target="_blank" rel="noreferrer" className="text-vb-bleu">odwb.be</a> · Licence CC0
+            Données mandataires : <a href="https://www.odwb.be" target="_blank" rel="noreferrer" className="text-vb-bleu hover:underline">odwb.be</a>
+            {' '}· Licence CC0 · ⚠️ Validation juriste obligatoire avant toute adoption
           </div>
         </div>
-      </div>
+      </main>
     </div>
   );
 }
