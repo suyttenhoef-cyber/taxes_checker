@@ -243,7 +243,25 @@ Source : Circulaire budgétaire DGPL 2025 — Chapitre VI.2
    b) Redevance-AUTORISATION : contrepartie d'une autorisation ou d'un avantage particulier accordé.
    Recouvrement via : CDLD art. L1124-40 §1er (pas les art. L3321-1 à 12, réservés aux taxes).
 
-3. TESTS DE QUALIFICATION (jurisprudence CE / Cour constitutionnelle)
+3. QUALIFICATIONS PRÉSUMÉES CORRECTES — NE PAS REQUALIFIER SANS INDICE TRÈS FORT
+   Les types suivants sont des TAXES communales wallonnes reconnues, même s'il existe un service
+   public associé. Ne pas les requalifier en redevance sauf contradiction manifeste dans le texte :
+   - Taxe sur les inhumations / dispersions / columbarium (service funéraire = obligation publique,
+     pas contrepartie proportionnelle individualisée)
+   - Taxe sur les secondes résidences (pas de prestation individualisée)
+   - Taxe sur les immeubles bâtis inoccupés (mesure de politique foncière)
+   - Taxe sur les terrains non bâtis en lotissement ou en bordure de voirie
+   - Taxe sur les égouts (charge d'infrastructure, même si le réseau est un service)
+   - Taxe sur les agences bancaires, débits de boissons, night-shops, etc.
+   - Taxe additionnelle IPP (additionnelle sur impôt fédéral)
+
+   Les types suivants sont des REDEVANCES communales reconnues :
+   - Redevance pour utilisation de bornes de recharge électrique (service + occupation du domaine)
+   - Redevance pour caveau/columbarium d'attente (service individualisé, durée limitée)
+   - Redevance pour occupation du domaine public (terrasses, enseignes, etc.)
+   - Redevance pour délivrance de documents administratifs (service direct et individualisé)
+
+4. TESTS DE QUALIFICATION (jurisprudence CE / Cour constitutionnelle)
    a) Y a-t-il une contrepartie DIRECTE et INDIVIDUALISÉE pour le redevable ?
       → NON = taxe / OUI = potentiellement une redevance
    b) La contrepartie est-elle PROPORTIONNELLE au coût réel de la prestation ?
@@ -252,9 +270,11 @@ Source : Circulaire budgétaire DGPL 2025 — Chapitre VI.2
       → Non = indice fort de taxe / Oui = cohérent avec une redevance
    d) La commune dégage-t-elle un BÉNÉFICE NET au-delà du coût réel ?
       → Oui = indice de taxe déguisée
-   e) PIÈGE FRÉQUENT : la qualification retenue par la commune ne lie pas le juge.
-      Le CE et la CC analysent la nature RÉELLE du prélèvement, pas son appellation
-      (CE 28 mars 2018, n°241.158).
+   e) GARDE-FOU POUR L'ANALYSE : Ne requalifier que si les critères a), b), c) et d) convergent
+      TOUS vers une mauvaise qualification. Un seul critère ambigu ne suffit JAMAIS.
+      La qualification correcte dans un règlement bien rédigé doit être CONFIRMÉE, pas remise en doute.
+      Note jurisprudentielle : le juge peut requalifier en cas de contradiction manifeste
+      (CE 28 mars 2018, n°241.158) — mais cela concerne les contentieux, pas l'analyse préventive.
 
 4. JURISPRUDENCE CLÉ — TEXTES VERBATIM OU RÉSUMÉS
 

@@ -71,14 +71,25 @@ const AGENTS_CONFIG = [
     key:    'qualification',
     label:  'Qualification juridique (taxe vs redevance)',
     system: buildSystem('qualification',
-      'Qualification juridique — déterminer si le règlement est bien qualifié (taxe ou redevance), identifier le sous-type (redevance-service ou redevance-autorisation), et vérifier la proportionnalité pour les redevances.'),
+      'Qualification juridique — confirmer si le règlement est correctement qualifié (taxe ou redevance) en comparant avec les types connus de la base, et signaler uniquement les erreurs manifestes de qualification.'),
     userPrefix: `Analyse la QUALIFICATION JURIDIQUE du règlement ci-dessous.
-Vérifie :
-1. La qualification retenue (taxe / redevance) est-elle correcte au regard de la nature réelle du prélèvement ?
-2. Pour une redevance : le type (autorisation vs service) est-il approprié ? La proportionnalité est-elle respectée ?
-3. Le titre du règlement reflète-t-il la qualification correcte ?
-4. Y a-t-il des indices d'une taxe déguisée en redevance ?
-5. Le fait générateur est-il clairement défini et cohérent avec la qualification retenue ?`,
+
+RÈGLE FONDAMENTALE — PRÉSOMPTION DE QUALIFICATION CORRECTE :
+Pars du principe que la qualification retenue dans le règlement est CORRECTE.
+Ne la remets en cause QUE si tu trouves un indice TRÈS CLAIR ET FORT d'une erreur manifeste.
+La présence d'un service public (inhumations, égouts, etc.) dans une taxe NE SUFFIT PAS à la requalifier en redevance.
+Une taxe reste une taxe quand il n'existe pas de rapport raisonnable et proportionnel entre le montant et le coût réel d'une prestation individualisée.
+
+Procédure :
+1. Cherche d'abord dans TYPES_REGLEMENT si ce type de règlement est connu.
+   → Si le type est identifié ET la qualification conforme : signale-le comme point CONFORME (gravite: "info") — n'invente pas de problème.
+   → Si le type est inconnu, applique les critères de DISTINCTION_TAXE_REDEVANCE.
+2. Pour une redevance : la proportionnalité est-elle CLAIREMENT rompue (montant totalement disproportionné, aucune prestation individualisée) ?
+3. Le titre du règlement est-il cohérent avec la qualification interne du texte ?
+4. Y a-t-il une CONTRADICTION MANIFESTE dans le règlement lui-même (ex. : intitulé "taxe" mais le texte décrit une prestation avec tarification proportionnelle au coût) ?
+5. Le fait générateur est-il clairement défini et cohérent avec la qualification retenue ?
+
+IMPORTANT : Si la qualification est correcte, dis-le (gravite: "info"). Ne théorise PAS sur des alternatives de qualification si le règlement est cohérent avec son type. L'objectif est de détecter les erreurs MANIFESTES, pas de créer de l'incertitude là où il n'y en a pas.`,
   },
   {
     key:    'visas',
