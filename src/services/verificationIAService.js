@@ -239,16 +239,13 @@ async function runSynthese(texte, agentResults) {
 
   const system = `Tu es un juriste administratif expert en droit communal wallon.
 Tu reçois les résultats de 5 agents d'analyse spécialisés d'un règlement-taxe/redevance communal.
-Tu dois produire une synthèse globale consolidée.
+Tu dois produire une synthèse qualitative consolidée (le score numérique est calculé séparément).
 
-Retourne UNIQUEMENT un objet JSON valide avec exactement ces 4 champs :
+Retourne UNIQUEMENT un objet JSON valide avec exactement ces 2 champs :
 {
-  "scoreGlobal": [moyenne pondérée des scores agents, entier 0-100],
-  "niveau": "[insuffisant | a_ameliorer | acceptable | bon | excellent]",
-  "resumeExecutif": "[3-4 phrases : nature du règlement, points forts, points à corriger en priorité]",
+  "resumeExecutif": "[3-4 phrases : nature du règlement, points forts, points critiques à corriger en priorité]",
   "recommandationPrincipale": "[action la plus urgente à mener, 1 phrase]"
-}
-Règle scoreGlobal : critique présent → max 59 · aucun critique mais ameliorer → max 79 · aucun critique/ameliorer → 80+.`;
+}`;
 
   const res = await fetch(`${WORKER_URL}/openai/v1/chat/completions`, {
     method:  'POST',
@@ -271,6 +268,35 @@ Règle scoreGlobal : critique présent → max 59 · aucun critique mais amelior
 
   const data = await res.json();
   return JSON.parse(data.choices[0].message.content);
+}
+
+// ─── Scoring déterministe ─────────────────────────────────────────────────────
+// Voir docs/SCORING.md pour la documentation complète de la formule.
+
+const POIDS_FINDING = { critique: 15, ameliorer: 4 };
+
+function calculerScore(agents) {
+  const findings = agents
+    .filter(a => a.ok)
+    .flatMap(a => a.result?.findings || []);
+
+  const Nc = findings.filter(f => f.gravite === 'critique').length;
+  const Na = findings.filter(f =>
+    f.gravite === 'ameliorer' || f.gravite === 'majeur' || f.gravite === 'mineur'
+  ).length;
+
+  let score = 100 - (Nc * POIDS_FINDING.critique) - (Na * POIDS_FINDING.ameliorer);
+  score = Math.max(0, score);
+  if (Nc >= 1) score = Math.min(score, 59);
+  return Math.round(score);
+}
+
+function scoreToNiveau(score) {
+  if (score >= 90) return 'excellent';
+  if (score >= 80) return 'bon';
+  if (score >= 70) return 'acceptable';
+  if (score >= 60) return 'a_ameliorer';
+  return 'insuffisant';
 }
 
 // ─── Point d'entrée principal ─────────────────────────────────────────────────
@@ -302,6 +328,10 @@ export async function verifierAvecIA(texte, onProgress) {
   synthese.pointsCritiques = allFindings.filter(f => f.gravite === 'critique');
   synthese.avertissements  = allFindings.filter(f => f.gravite === 'ameliorer');
   synthese.pointsConformes = allFindings.filter(f => f.gravite === 'conforme');
+
+  // Score déterministe — remplace l'estimation subjective de GPT (voir docs/SCORING.md)
+  synthese.scoreGlobal = calculerScore(agents);
+  synthese.niveau      = scoreToNiveau(synthese.scoreGlobal);
 
   onProgress?.('complet', 6, 6);
 
