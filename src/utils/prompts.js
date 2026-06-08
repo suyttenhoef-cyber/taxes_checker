@@ -1,5 +1,6 @@
 import { CATEGORIES } from '../data/categories.js';
 import { NOTES_SOUS_CAT } from '../data/notes.js';
+import { MODELES_ARTICLES, TYPES_REGLEMENT } from '../data/legalKnowledge.js';
 
 export function buildSystemPrompt(dateSeance, listePresents, listeAbsents, nomDG, nomBourg) {
   const dateStr  = dateSeance
@@ -136,13 +137,19 @@ ${p.typeReglement === 'redevance'
   ? "Art. 6   — Mode de perception et exigibilité : redevance exigible dès l'obtention de l'autorisation, payable au comptant à la caisse communale contre reçu ; à défaut, payable dans les 30 jours suivant la réception de l'invitation à payer, intérêts légaux de plein droit"
   : "Art. 6   — Paiement par voie de rôle, délai 2 mois à compter de l'envoi de l'avertissement-extrait de rôle"}
 Art. 7   — Recouvrement${p.typeReglement === 'redevance' ? ' par voie de contrainte (L1124-40 §1er CDLD), mise en demeure recommandée préalable, frais à charge du débiteur' : ' (L3321-1 à L3321-12 CDLD, AR 12/04/1999) avec sommation recommandée (L3321-8bis)'}
-Art. 8   — Réclamation dans les 6 mois (L3321-9 CDLD — ordre public), par recommandé au Collège, sous peine de déchéance${p.typeReglement === 'redevance' ? ' ; délai de 3 mois pour statuer, accusé de réception dans les 8 jours, décision notifiée par recommandé' : ''}
+Art. 8   — Réclamation dans le délai d'UN AN à dater du 3ème jour ouvrable suivant l'envoi de l'avertissement-extrait de rôle (L3321-9 CDLD — loi 20/12/2022), par écrit au Collège communal, sous peine de déchéance${p.typeReglement === 'redevance' ? ' ; délai de 6 mois pour statuer, recours TPI si absence de décision dans ce délai' : ' ; recours TPI possible si absence de décision du Collège dans les 6 mois (9 mois pour taxation d\'office)'}
 Art. 9   — Protection des données (RGPD) : responsable = ${p.commune || 'la commune'}, finalité fiscale, conservation 30 ans
 Art. 10  — Tutelle : Gouvernement wallon, L3131-1 et suivants, tutelle spéciale d'approbation
 Art. 11  — Publication et entrée en vigueur (L1133-1 et L1133-2 CDLD)
 
 RÈGLEMENTS DE RÉFÉRENCE VANDEN BROELE :
-${pf.length > 0 ? pf : '(aucune référence disponible — appliquer strictement les exigences légales ci-dessus)'}`;
+${pf.length > 0 ? pf : '(aucune référence disponible — appliquer strictement les exigences légales ci-dessus)'}
+
+BASE JURIDIQUE DE RÉFÉRENCE — RÈGLES IMPÉRATIVES (source exclusive) :
+${TYPES_REGLEMENT}
+
+FORMULATIONS TYPES OFFICIELLES :
+${MODELES_ARTICLES}`;
 
   return [
     { role: 'system', content: buildSystemPrompt(p.dateSeance, listePresents, listeAbsents, dirGenNom, bourgNom) },
