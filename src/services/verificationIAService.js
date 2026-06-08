@@ -301,3 +301,91 @@ export async function verifierAvecIA(texte, onProgress) {
 }
 
 export { AGENTS_CONFIG };
+
+// ─── Auto-correction ──────────────────────────────────────────────────────────
+
+/**
+ * Génère une version corrigée du règlement en appliquant les findings critiques/majeurs.
+ * @param {string}   texte    — Texte original du règlement
+ * @param {object[]} agents   — Résultats des agents (tableau de { ok, result: { findings } })
+ * @param {function} onDelta  — Callback streaming (delta: string)
+ */
+export async function corrigerAvecIA(texte, agents, onDelta) {
+  if (!WORKER_URL) throw new Error('VITE_WORKER_URL non configuré');
+
+  const corrections = agents
+    .filter(a => a.ok)
+    .flatMap(a => (a.result?.findings || []).filter(f => f.gravite === 'critique' || f.gravite === 'majeur'));
+
+  if (!corrections.length) throw new Error('Aucun problème critique ou majeur à corriger — le règlement est déjà conforme sur ces points.');
+
+  const liste = corrections
+    .map((f, i) => `${i + 1}. [${f.gravite.toUpperCase()}] ${f.titre}${f.article ? ` (${f.article})` : ''}
+   Problème : ${f.detail}
+   Correction à appliquer : ${f.correction || '(voir le détail)'}`)
+    .join('\n\n');
+
+  const system = `Tu es un juriste expert en droit communal wallon.
+Tu reçois un règlement-taxe ou redevance communal wallon et une liste de corrections à apporter.
+Ta mission : produire la version corrigée du règlement en appliquant TOUTES les corrections listées.
+
+RÈGLES STRICTES :
+- Conserve exactement la structure, le style officiel et le format du règlement original.
+- Ne modifie QUE les passages nécessaires pour corriger les problèmes identifiés.
+- Ne reformule pas et ne résume pas les passages déjà conformes.
+- Le règlement corrigé doit être aussi complet que l'original.
+- Retourne UNIQUEMENT le texte complet du règlement corrigé, sans introduction, sans commentaires.`;
+
+  const user = `RÈGLEMENT À CORRIGER :
+---
+${texte.slice(0, 12000)}
+---
+
+CORRECTIONS À APPLIQUER (${corrections.length} problème(s) critique(s)/majeur(s)) :
+${liste}
+
+Produis maintenant le texte complet du règlement corrigé.`;
+
+  const res = await fetch(`${WORKER_URL}/openai/v1/chat/completions`, {
+    method:  'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body:    JSON.stringify({
+      model:      'gpt-4o',
+      max_tokens: 6000,
+      stream:     true,
+      messages:   [
+        { role: 'system', content: system },
+        { role: 'user',   content: user },
+      ],
+    }),
+  });
+
+  if (!res.ok) {
+    const body = await res.text().catch(() => '');
+    throw new Error(`Auto-correction : API ${res.status}${body ? ' — ' + body.slice(0, 120) : ''}`);
+  }
+
+  const reader = res.body.getReader();
+  const dec    = new TextDecoder();
+  let   buf    = '';
+
+  const processLine = line => {
+    if (!line.startsWith('data: ')) return;
+    const d = line.slice(6).trim();
+    if (d === '[DONE]') return;
+    try {
+      const delta = JSON.parse(d)?.choices?.[0]?.delta?.content || '';
+      if (delta) onDelta?.(delta);
+    } catch {}
+  };
+
+  while (true) {
+    const { done, value } = await reader.read();
+    if (done) break;
+    buf += dec.decode(value, { stream: true });
+    const lines = buf.split('\n');
+    buf = lines.pop();
+    lines.forEach(processLine);
+  }
+  if (buf) processLine(buf);
+}
