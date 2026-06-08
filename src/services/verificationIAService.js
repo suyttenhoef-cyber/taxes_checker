@@ -321,10 +321,16 @@ export async function verifierAvecIA(texte, onProgress) {
 
   const synthese = await runSynthese(texte, settled);
 
-  // Aggregate findings from agent results — GPT only provides score/niveau/résumé
-  const allFindings = settled
-    .filter(r => r.status === 'fulfilled')
-    .flatMap(r => r.value.findings || []);
+  const agents = settled.map((r, i) => ({
+    key:    AGENTS_CONFIG[i].key,
+    label:  AGENTS_CONFIG[i].label,
+    ok:     r.status === 'fulfilled',
+    result: r.status === 'fulfilled' ? r.value : null,
+    error:  r.status === 'rejected'  ? r.reason?.message : null,
+  }));
+
+  // Aggregate findings — GPT only provides résumé/recommandation, score calculé séparément
+  const allFindings = agents.filter(a => a.ok).flatMap(a => a.result?.findings || []);
   synthese.pointsCritiques = allFindings.filter(f => f.gravite === 'critique');
   synthese.avertissements  = allFindings.filter(f => f.gravite === 'ameliorer');
   synthese.pointsConformes = allFindings.filter(f => f.gravite === 'conforme');
@@ -334,14 +340,6 @@ export async function verifierAvecIA(texte, onProgress) {
   synthese.niveau      = scoreToNiveau(synthese.scoreGlobal);
 
   onProgress?.('complet', 6, 6);
-
-  const agents = settled.map((r, i) => ({
-    key:    AGENTS_CONFIG[i].key,
-    label:  AGENTS_CONFIG[i].label,
-    ok:     r.status === 'fulfilled',
-    result: r.status === 'fulfilled' ? r.value : null,
-    error:  r.status === 'rejected'  ? r.reason?.message : null,
-  }));
 
   return {
     agents,
