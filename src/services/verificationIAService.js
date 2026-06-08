@@ -97,6 +97,12 @@ IMPORTANT : Si la qualification est correcte, dis-le (gravite: "info"). Ne théo
     system: buildSystem('visas',
       "Visas légaux — vérifier la présence, la formulation exacte et l'ordre des visas obligatoires et recommandés."),
     userPrefix: `Analyse les VISAS LÉGAUX du règlement ci-dessous.
+
+RÈGLE DE GRAVITÉ OBLIGATOIRE :
+- Visa ABSENT alors qu'il est obligatoire → gravite "critique"
+- Visa PRÉSENT mais mal formulé ou dans le mauvais ordre → gravite "majeur" ou "mineur"
+- Visa PRÉSENT et CORRECTEMENT FORMULÉ → gravite "info" (ne jamais mettre "critique" pour un visa conforme)
+
 Vérifie :
 1. Tous les visas obligatoires sont-ils présents ? (Constitution art. 41, 162, 170 §4, 172 ; CDLD L1122-30 ; Loi 24/12/1996)
 2. Les formulations sont-elles conformes aux formulations standards ?
@@ -111,6 +117,14 @@ Vérifie :
     system: buildSystem('structure',
       "Structure du règlement — vérifier la présence et la qualité de chaque article obligatoire (objet, redevable, assiette, taux, exonérations, déclaration, enrôlement, taxation d'office, réclamation, transmission, entrée en vigueur)."),
     userPrefix: `Analyse la STRUCTURE ET LES ARTICLES OBLIGATOIRES du règlement ci-dessous.
+
+RÈGLE DE GRAVITÉ OBLIGATOIRE — à appliquer pour chaque article :
+- Article ABSENT alors qu'il est obligatoire → gravite "critique"
+- Article PRÉSENT mais mal formulé ou incomplet → gravite "majeur" ou "mineur" selon l'impact
+- Article PRÉSENT et CORRECTEMENT RÉDIGÉ → gravite "info" (confirme la conformité — ne jamais mettre "critique" ou "majeur" pour un article bien rédigé)
+
+Ne génère un finding "critique" QUE s'il y a un vrai problème bloquant. Un article correctement rédigé se signale toujours en "info".
+
 Vérifie la présence et la qualité de :
 1. Article objet / matière imposable (clairement défini ?)
 2. Article redevable (précisément désigné ?)
