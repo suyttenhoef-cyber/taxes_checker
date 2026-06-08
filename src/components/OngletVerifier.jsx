@@ -4,12 +4,22 @@ import { verifierAvecIA, corrigerAvecIA, AGENTS_CONFIG } from '../services/verif
 // ─── Helpers visuels ──────────────────────────────────────────────────────────
 
 const GRAVITE_STYLE = {
-  critique: 'bg-red-100 border-red-400 text-red-800',
-  majeur:   'bg-orange-100 border-orange-400 text-orange-800',
-  mineur:   'bg-yellow-100 border-yellow-400 text-yellow-800',
-  info:     'bg-green-100 border-green-400 text-green-800',
+  critique:  'bg-red-100 border-red-400 text-red-800',
+  ameliorer: 'bg-orange-100 border-orange-400 text-orange-800',
+  conforme:  'bg-green-100 border-green-400 text-green-800',
+  // fallbacks anciens niveaux
+  majeur:    'bg-orange-100 border-orange-400 text-orange-800',
+  mineur:    'bg-orange-100 border-orange-400 text-orange-800',
+  info:      'bg-green-100 border-green-400 text-green-800',
 };
-const GRAVITE_LABEL = { critique: 'Critique', majeur: 'Majeur', mineur: 'Mineur', info: 'Conforme' };
+const GRAVITE_LABEL = {
+  critique:  'Critique',
+  ameliorer: 'À améliorer',
+  conforme:  'Conforme',
+  majeur:    'À améliorer',
+  mineur:    'À améliorer',
+  info:      'Conforme',
+};
 
 const scoreColor = s =>
   s >= 90 ? 'text-green-700' : s >= 80 ? 'text-emerald-600' :
@@ -77,8 +87,8 @@ function AgentPanel({ agent }) {
     );
   }
   const r = agent.result;
-  const critiques = r.findings?.filter(f => f.gravite === 'critique').length || 0;
-  const majeurs   = r.findings?.filter(f => f.gravite === 'majeur').length || 0;
+  const critiques  = r.findings?.filter(f => f.gravite === 'critique').length || 0;
+  const ameliorer  = r.findings?.filter(f => f.gravite === 'ameliorer' || f.gravite === 'majeur' || f.gravite === 'mineur').length || 0;
   return (
     <div className="border border-gray-200 rounded-lg mb-3 overflow-hidden">
       <button className="w-full text-left px-4 py-3 flex items-center gap-3 bg-gray-50 hover:bg-gray-100"
@@ -89,8 +99,8 @@ function AgentPanel({ agent }) {
           <p className="text-xs text-gray-500 mt-0.5">{r.resume?.slice(0, 100)}{r.resume?.length > 100 ? '…' : ''}</p>
         </div>
         <div className="flex gap-1 flex-shrink-0">
-          {critiques > 0 && <span className="text-xs bg-red-100 text-red-700 border border-red-300 rounded px-2 py-0.5">{critiques} crit.</span>}
-          {majeurs > 0   && <span className="text-xs bg-orange-100 text-orange-700 border border-orange-300 rounded px-2 py-0.5">{majeurs} maj.</span>}
+          {critiques > 0 && <span className="text-xs bg-red-100 text-red-700 border border-red-300 rounded px-2 py-0.5">{critiques} critique{critiques > 1 ? 's' : ''}</span>}
+          {ameliorer > 0 && <span className="text-xs bg-orange-100 text-orange-700 border border-orange-300 rounded px-2 py-0.5">{ameliorer} à améliorer</span>}
         </div>
         <span className="text-gray-400 ml-2">{open ? '▲' : '▼'}</span>
       </button>
@@ -213,7 +223,7 @@ export default function OngletVerifier({ texteInitial = '' }) {
   const nbActionable = resultat
     ? resultat.agents.filter(a => a.ok)
         .flatMap(a => a.result?.findings || [])
-        .filter(f => f.gravite === 'critique' || f.gravite === 'majeur').length
+        .filter(f => f.gravite === 'critique' || f.gravite === 'ameliorer' || f.gravite === 'majeur' || f.gravite === 'mineur').length
     : 0;
 
   const lancer = useCallback(async () => {

@@ -7,16 +7,26 @@ const SZ   = 22; // 11pt
 const SZS  = 20; // 10pt
 
 const COL = {
-  critique: 'DC2626',
-  majeur:   'EA580C',
-  mineur:   'CA8A04',
-  info:     '16A34A',
-  navy:     '0D1B35',
-  gray:     '6B7280',
-  blue:     '1D4ED8',
+  critique:  'DC2626',
+  ameliorer: 'EA580C',
+  conforme:  '16A34A',
+  // fallbacks anciens niveaux
+  majeur:    'EA580C',
+  mineur:    'EA580C',
+  info:      '16A34A',
+  navy:      '0D1B35',
+  gray:      '6B7280',
+  blue:      '1D4ED8',
 };
 
-const GRAVITE_LABEL = { critique: 'CRITIQUE', majeur: 'MAJEUR', mineur: 'MINEUR', info: 'CONFORME' };
+const GRAVITE_LABEL = {
+  critique:  'CRITIQUE',
+  ameliorer: 'À AMÉLIORER',
+  conforme:  'CONFORME',
+  majeur:    'À AMÉLIORER',
+  mineur:    'À AMÉLIORER',
+  info:      'CONFORME',
+};
 const NIVEAU_LABEL  = { insuffisant: 'Insuffisant', a_ameliorer: 'À améliorer', acceptable: 'Acceptable', bon: 'Bon', excellent: 'Excellent' };
 
 function t(text, opts = {}) {
@@ -140,10 +150,10 @@ export async function exportRapportDocx({ resultat }) {
   const allMineurs = agents.filter(a => a.ok).flatMap(a => (a.result?.findings || []).filter(f => f.gravite === 'mineur'));
 
   const sections = [
-    { title: 'PROBLÈMES CRITIQUES', color: COL.critique, items: synthese.pointsCritiques || [], gravite: 'critique' },
-    { title: 'AVERTISSEMENTS',      color: COL.majeur,   items: synthese.avertissements  || [], gravite: 'majeur'   },
-    { title: 'POINTS MINEURS',      color: COL.mineur,   items: allMineurs,                     gravite: 'mineur'   },
-    { title: 'POINTS CONFORMES',    color: COL.info,     items: synthese.pointsConformes || [], gravite: 'info'     },
+    { title: 'PROBLÈMES CRITIQUES', color: COL.critique,  items: synthese.pointsCritiques || [], gravite: 'critique'  },
+    { title: 'À AMÉLIORER',         color: COL.ameliorer, items: synthese.avertissements  || [], gravite: 'ameliorer' },
+    { title: 'POINTS MINEURS',      color: COL.ameliorer, items: allMineurs,                     gravite: 'ameliorer' },
+    { title: 'POINTS CONFORMES',    color: COL.conforme,  items: synthese.pointsConformes || [], gravite: 'conforme'  },
   ];
 
   for (const s of sections) {

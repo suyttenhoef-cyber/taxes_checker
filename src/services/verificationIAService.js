@@ -25,7 +25,7 @@ const OUTPUT_SCHEMA = `Retourne UNIQUEMENT un objet JSON valide sans commentaire
   "statut": "[conforme | avertissement | non_conforme | indetermine]",
   "findings": [
     {
-      "gravite": "[critique | majeur | mineur | info]",
+      "gravite": "[critique | ameliorer | conforme]",
       "titre": "[titre court du point analysé]",
       "detail": "[explication précise du problème ou de la conformité]",
       "article": "[référence légale exacte : 'Constitution, art. 170, §4' ou 'CDLD, art. L3321-10' etc.]",
@@ -36,11 +36,12 @@ const OUTPUT_SCHEMA = `Retourne UNIQUEMENT un objet JSON valide sans commentaire
   "resume": "[2-3 phrases synthétisant l'analyse de ce domaine]"
 }
 
-Règles de scoring :
-- critique = erreur bloquante qui expose la commune à une annulation par la tutelle
-- majeur   = problème sérieux qui affaiblit le règlement juridiquement
-- mineur   = imperfection formelle ou manque de précision
-- info     = bonne pratique ou observation sans impact juridique
+Règles de gravité — 3 niveaux UNIQUEMENT :
+- critique  = article obligatoire ABSENT ou ERRONÉ → expose la commune à une annulation ou un rejet par la tutelle (rouge)
+- ameliorer = élément présent mais à corriger ou améliorer pour la qualité juridique du texte (orange)
+- conforme  = article présent et correctement rédigé → confirme la conformité, pas de problème (vert)
+
+IMPORTANT : utiliser "conforme" pour tout élément correct. "critique" UNIQUEMENT si l'élément est absent ou manifestement erroné.
 Score 90-100 = excellent · 80-89 = bon · 70-79 = acceptable · 60-69 = à améliorer · <60 = insuffisant`;
 
 // ─── System prompts par agent ─────────────────────────────────────────────────
@@ -82,14 +83,14 @@ Une taxe reste une taxe quand il n'existe pas de rapport raisonnable et proporti
 
 Procédure :
 1. Cherche d'abord dans TYPES_REGLEMENT si ce type de règlement est connu.
-   → Si le type est identifié ET la qualification conforme : signale-le comme point CONFORME (gravite: "info") — n'invente pas de problème.
+   → Si le type est identifié ET la qualification conforme : signale-le comme point CONFORME (gravite: "conforme") — n'invente pas de problème.
    → Si le type est inconnu, applique les critères de DISTINCTION_TAXE_REDEVANCE.
 2. Pour une redevance : la proportionnalité est-elle CLAIREMENT rompue (montant totalement disproportionné, aucune prestation individualisée) ?
 3. Le titre du règlement est-il cohérent avec la qualification interne du texte ?
 4. Y a-t-il une CONTRADICTION MANIFESTE dans le règlement lui-même (ex. : intitulé "taxe" mais le texte décrit une prestation avec tarification proportionnelle au coût) ?
 5. Le fait générateur est-il clairement défini et cohérent avec la qualification retenue ?
 
-IMPORTANT : Si la qualification est correcte, dis-le (gravite: "info"). Ne théorise PAS sur des alternatives de qualification si le règlement est cohérent avec son type. L'objectif est de détecter les erreurs MANIFESTES, pas de créer de l'incertitude là où il n'y en a pas.`,
+IMPORTANT : Si la qualification est correcte, dis-le (gravite: "conforme"). Ne théorise PAS sur des alternatives de qualification si le règlement est cohérent avec son type. L'objectif est de détecter les erreurs MANIFESTES, pas de créer de l'incertitude là où il n'y en a pas.`,
   },
   {
     key:    'visas',
@@ -98,10 +99,10 @@ IMPORTANT : Si la qualification est correcte, dis-le (gravite: "info"). Ne théo
       "Visas légaux — vérifier la présence, la formulation exacte et l'ordre des visas obligatoires et recommandés."),
     userPrefix: `Analyse les VISAS LÉGAUX du règlement ci-dessous.
 
-RÈGLE DE GRAVITÉ OBLIGATOIRE :
+RÈGLE DE GRAVITÉ OBLIGATOIRE (3 niveaux) :
 - Visa ABSENT alors qu'il est obligatoire → gravite "critique"
-- Visa PRÉSENT mais mal formulé ou dans le mauvais ordre → gravite "majeur" ou "mineur"
-- Visa PRÉSENT et CORRECTEMENT FORMULÉ → gravite "info" (ne jamais mettre "critique" pour un visa conforme)
+- Visa PRÉSENT mais mal formulé ou dans le mauvais ordre → gravite "ameliorer"
+- Visa PRÉSENT et CORRECTEMENT FORMULÉ → gravite "conforme" (ne jamais mettre "critique" pour un visa conforme)
 
 Vérifie :
 1. Tous les visas obligatoires sont-ils présents ? (Constitution art. 41, 162, 170 §4, 172 ; CDLD L1122-30 ; Loi 24/12/1996)
@@ -118,12 +119,10 @@ Vérifie :
       "Structure du règlement — vérifier la présence et la qualité de chaque article obligatoire (objet, redevable, assiette, taux, exonérations, déclaration, enrôlement, taxation d'office, réclamation, transmission, entrée en vigueur)."),
     userPrefix: `Analyse la STRUCTURE ET LES ARTICLES OBLIGATOIRES du règlement ci-dessous.
 
-RÈGLE DE GRAVITÉ OBLIGATOIRE — à appliquer pour chaque article :
+RÈGLE DE GRAVITÉ OBLIGATOIRE (3 niveaux) :
 - Article ABSENT alors qu'il est obligatoire → gravite "critique"
-- Article PRÉSENT mais mal formulé ou incomplet → gravite "majeur" ou "mineur" selon l'impact
-- Article PRÉSENT et CORRECTEMENT RÉDIGÉ → gravite "info" (confirme la conformité — ne jamais mettre "critique" ou "majeur" pour un article bien rédigé)
-
-Ne génère un finding "critique" QUE s'il y a un vrai problème bloquant. Un article correctement rédigé se signale toujours en "info".
+- Article PRÉSENT mais INCORRECTEMENT FORMULÉ → gravite "ameliorer"
+- Article PRÉSENT et CORRECTEMENT RÉDIGÉ → gravite "conforme" (ne jamais mettre "critique" pour un article bien rédigé)
 
 Vérifie la présence et la qualité de :
 1. Article objet / matière imposable (clairement défini ?)
@@ -224,8 +223,8 @@ async function runSynthese(texte, agentResults) {
     .map(r => {
       const v = r.value;
       const critiques = (v.findings || []).filter(f => f.gravite === 'critique');
-      const majeurs   = (v.findings || []).filter(f => f.gravite === 'majeur');
-      const lines = [...critiques, ...majeurs]
+      const ameliorer = (v.findings || []).filter(f => f.gravite === 'ameliorer');
+      const lines = [...critiques, ...ameliorer]
         .map(f => `  - [${f.gravite.toUpperCase()}] ${f.titre}${f.article ? ' (' + f.article + ')' : ''}`)
         .join('\n');
       return `Agent ${v.agent} (score: ${v.score}/100, statut: ${v.statut})\nRésumé: ${v.resume}\nProblèmes principaux:\n${lines || '  (aucun)'}`;
@@ -246,7 +245,7 @@ Retourne UNIQUEMENT un objet JSON valide avec exactement ces 4 champs :
   "resumeExecutif": "[3-4 phrases : nature du règlement, points forts, points à corriger en priorité]",
   "recommandationPrincipale": "[action la plus urgente à mener, 1 phrase]"
 }
-Règle scoreGlobal : critique présent → max 59 · aucun critique mais majeurs → max 79 · aucun critique/majeur → 80+.`;
+Règle scoreGlobal : critique présent → max 59 · aucun critique mais ameliorer → max 79 · aucun critique/ameliorer → 80+.`;
 
   const res = await fetch(`${WORKER_URL}/openai/v1/chat/completions`, {
     method:  'POST',
@@ -298,8 +297,8 @@ export async function verifierAvecIA(texte, onProgress) {
     .filter(r => r.status === 'fulfilled')
     .flatMap(r => r.value.findings || []);
   synthese.pointsCritiques = allFindings.filter(f => f.gravite === 'critique');
-  synthese.avertissements  = allFindings.filter(f => f.gravite === 'majeur');
-  synthese.pointsConformes = allFindings.filter(f => f.gravite === 'info');
+  synthese.avertissements  = allFindings.filter(f => f.gravite === 'ameliorer');
+  synthese.pointsConformes = allFindings.filter(f => f.gravite === 'conforme');
 
   onProgress?.('complet', 6, 6);
 
@@ -338,7 +337,7 @@ export async function corrigerAvecIA(texte, agents, onDelta) {
 
   const corrections = agents
     .filter(a => a.ok)
-    .flatMap(a => (a.result?.findings || []).filter(f => f.gravite === 'critique' || f.gravite === 'majeur'));
+    .flatMap(a => (a.result?.findings || []).filter(f => f.gravite === 'critique' || f.gravite === 'ameliorer'));
 
   if (!corrections.length) throw new Error('Aucun problème critique ou majeur à corriger — le règlement est déjà conforme sur ces points.');
 
