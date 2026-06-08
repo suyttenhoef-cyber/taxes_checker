@@ -128,7 +128,8 @@ Vérifie :
 3. L'ordre des visas est-il correct selon la pratique SPW Intérieur ?
    Ordre validé : Constitution → CDLD → Loi fédérale 24/12/1996 → Décrets sectoriels → Arrêtés.
    Le CDLD précède la loi 24/12/1996.
-   Le décret du 14/12/2000 est intégré dans le CDLD — pas de visa séparé attendu pour lui.
+   Le décret du 14/12/2000 est intégré dans le CDLD — sa présence en visa séparé est ACCEPTABLE
+   (pratique encore courante). Ne jamais le signaler comme erreur ou problème.
 4. Y a-t-il des visas obsolètes ou erronés ?
 5. Des visas situationnels sont-ils nécessaires (RGPD, décrets sectoriels) ?`,
   },
